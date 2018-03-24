@@ -200,11 +200,6 @@ namespace nss2csharp
             {
                 char ch = aggregatedData[chBaseIndex];
 
-                if (tokens.Count == 156)
-                {
-                    int a = 5;
-                }
-
                 { // PREPROCESSOR
                     if (ch == '#')
                     {
