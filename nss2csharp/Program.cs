@@ -323,10 +323,10 @@ namespace nss2csharp
                     {
                         NssLexLiteral literal = new NssLexLiteral();
 
+                        bool seenDecimalPlace = false;
                         while (++chScanningIndex < aggregatedData.Length)
                         {
                             char chScanning = aggregatedData[chScanningIndex];
-                            bool seenDecimalPlace = false;
 
                             if (isString)
                             {
@@ -344,13 +344,12 @@ namespace nss2csharp
                             else
                             {
                                 // If we're a number, we need to keep track of whether we've seen a decimal place,
-                                // then scan to the next separator.
+                                // and scan until we're no longer a number or a decimal place.
                                 if (chScanning == '.')
                                 {
                                     seenDecimalPlace = true;
                                 }
-
-                                if (NssLexSeparator.Map.ContainsKey(chScanning))
+                                else if (!char.IsNumber(chScanning))
                                 {
                                     literal.m_LiteralType = seenDecimalPlace ? NssLexLiteralType.Float : NssLexLiteralType.Int;
                                     literal.m_Literal = aggregatedData.Substring(chBaseIndex, chScanningIndex - chBaseIndex);
