@@ -106,6 +106,7 @@ namespace nss2csharp
     public enum NssLexOperators
     {
         Addition,
+        Subtraction,
         Division,
         Multiplication,
         Modulo,
@@ -127,6 +128,7 @@ namespace nss2csharp
         public static Dictionary<char, NssLexOperators> Map = new Dictionary<char, NssLexOperators>
         {
             { '+',  NssLexOperators.Addition },
+            { '-',  NssLexOperators.Subtraction },
             { '/',  NssLexOperators.Division },
             { '*',  NssLexOperators.Multiplication },
             { '%',  NssLexOperators.Modulo },
