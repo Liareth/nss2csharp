@@ -306,16 +306,29 @@ namespace nss2csharp
                             string strFromData = data.Substring(chBaseIndex, kvp.Key.Length);
                             if (strFromData == kvp.Key)
                             {
-                                NssKeyword keyword = new NssKeyword();
-                                keyword.m_Keyword = kvp.Value;
+                                // We're matched a keyword, e.g. 'int ', but we might have, e.g. 'int integral', and the
+                                // 'integral' is an identifier. So let's only accept a keyword if the character proceeding it
+                                // is whitespace.
+                                int chNextAlongIndex = chBaseIndex + kvp.Key.Length;
+                                char chNextAlong = data[chNextAlongIndex];
 
-                                int chNewBaseIndex = chBaseIndex + kvp.Key.Length;
-                                AttachDebugData(keyword, debugRanges, chBaseIndex, chNewBaseIndex - 1);
+                                if (NssSeparator.Map.ContainsKey(chNextAlong))
+                                {
+                                    NssSeparators sep = NssSeparator.Map[chNextAlong];
+                                    if (sep == NssSeparators.Whitespace || sep == NssSeparators.Tab)
+                                    {
+                                        NssKeyword keyword = new NssKeyword();
+                                        keyword.m_Keyword = kvp.Value;
 
-                                Tokens.Add(keyword);
-                                chBaseIndex = chNewBaseIndex;
-                                foundKeyword = true;
-                                break;
+                                        int chNewBaseIndex = chNextAlongIndex;
+                                        AttachDebugData(keyword, debugRanges, chBaseIndex, chNewBaseIndex - 1);
+
+                                        Tokens.Add(keyword);
+                                        chBaseIndex = chNewBaseIndex;
+                                        foundKeyword = true;
+                                        break;
+                                    }
+                                }
                             }
                         }
 
