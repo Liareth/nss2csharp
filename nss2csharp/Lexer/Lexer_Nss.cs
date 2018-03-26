@@ -8,7 +8,7 @@ namespace nss2csharp
     {
         public List<NssToken> Tokens { get; private set; }
 
-        public int Analyse(IEnumerable<string> data)
+        public int Analyse(string data)
         {
             Tokens = new List<NssToken>();
 
@@ -17,7 +17,7 @@ namespace nss2csharp
             { // Set up the debug data per line.
                 int lineNum = 0;
                 int cumulativeLen = 0;
-                foreach (string line in data)
+                foreach (string line in data.Split('\n'))
                 {
                     NssLexDebugRange range = new NssLexDebugRange();
                     range.Line = lineNum;
@@ -30,25 +30,21 @@ namespace nss2csharp
                 }
             }
 
-            // Combine everything into a flat string that we can process more easily.
-            string aggregatedData = data.Aggregate((a, b) => a + b);
-
-
             int chBaseIndex = 0;
-            while (chBaseIndex < aggregatedData.Length)
+            while (chBaseIndex < data.Length)
             {
-                char ch = aggregatedData[chBaseIndex];
+                char ch = data[chBaseIndex];
 
                 { // PREPROCESSOR
                     if (ch == '#')
                     {
                         // Just scan for a new line or eof, then add this in.
                         int chScanningIndex = chBaseIndex;
-                        while (++chScanningIndex < aggregatedData.Length)
+                        while (++chScanningIndex < data.Length)
                         {
-                            char chScanning = aggregatedData[chScanningIndex];
+                            char chScanning = data[chScanningIndex];
 
-                            bool eof = chScanningIndex == aggregatedData.Length - 1;
+                            bool eof = chScanningIndex == data.Length - 1;
                             bool newLine = NssSeparator.Map.ContainsKey(chScanning) && NssSeparator.Map[chScanning] == NssSeparators.NewLine;
 
                             if (eof || newLine)
@@ -57,10 +53,10 @@ namespace nss2csharp
                                 preprocessor.m_PreprocessorType = NssPreprocessorType.Unknown;
 
                                 int chStartIndex = chBaseIndex;
-                                int chEndIndex = eof ? chScanningIndex : chScanningIndex - 1;
-                                preprocessor.m_Data = aggregatedData.Substring(chStartIndex, chEndIndex - chStartIndex);
+                                int chEndIndex = chScanningIndex + (eof ? 1 : 0);
+                                preprocessor.m_Data = data.Substring(chStartIndex, chEndIndex - chStartIndex);
 
-                                int chNewBaseIndex = eof ? chScanningIndex + 1 : chScanningIndex;
+                                int chNewBaseIndex = chScanningIndex + (eof ? 1 : 0);
                                 AttachDebugData(preprocessor, debugRanges, chBaseIndex, chNewBaseIndex - 1);
 
                                 Tokens.Add(preprocessor);
@@ -77,20 +73,20 @@ namespace nss2csharp
                     if (ch == '/')
                     {
                         int chNextIndex = chBaseIndex + 1;
-                        if (chNextIndex < aggregatedData.Length)
+                        if (chNextIndex < data.Length)
                         {
                             bool foundComment = false;
 
-                            char nextCh = aggregatedData[chNextIndex];
+                            char nextCh = data[chNextIndex];
                             if (nextCh == '/')
                             {
                                 // Line comment - scan for end of line, and collect.
                                 int chScanningIndex = chNextIndex;
-                                while (++chScanningIndex < aggregatedData.Length)
+                                while (++chScanningIndex < data.Length)
                                 {
-                                    char chScanning = aggregatedData[chScanningIndex];
+                                    char chScanning = data[chScanningIndex];
 
-                                    bool eof = chScanningIndex == aggregatedData.Length - 1;
+                                    bool eof = chScanningIndex == data.Length - 1;
                                     bool newLine = NssSeparator.Map.ContainsKey(chScanning) && NssSeparator.Map[chScanning] == NssSeparators.NewLine;
 
                                     if (eof || newLine)
@@ -107,10 +103,10 @@ namespace nss2csharp
                                         }
                                         else
                                         {
-                                            comment.m_Comment = aggregatedData.Substring(chStartIndex, chEndIndex - chStartIndex);
+                                            comment.m_Comment = data.Substring(chStartIndex, chEndIndex - chStartIndex);
                                         }
 
-                                        int chNewBaseIndex = eof ? chScanningIndex + 1 : chScanningIndex;
+                                        int chNewBaseIndex = chScanningIndex + (eof ? 1 : 0);
                                         AttachDebugData(comment, debugRanges, chBaseIndex, chNewBaseIndex - 1);
 
                                         Tokens.Add(comment);
@@ -125,12 +121,12 @@ namespace nss2csharp
                             {
                                 // Block comment - scan for */, ignoring everything else.
                                 int chScanningIndex = chNextIndex + 1;
-                                while (++chScanningIndex < aggregatedData.Length)
+                                while (++chScanningIndex < data.Length)
                                 {
-                                    char chScanning = aggregatedData[chScanningIndex];
+                                    char chScanning = data[chScanningIndex];
                                     if (chScanning == '/')
                                     {
-                                        char chScanningLast = aggregatedData[chScanningIndex - 1];
+                                        char chScanningLast = data[chScanningIndex - 1];
                                         if (chScanningLast == '*')
                                         {
                                             break;
@@ -143,7 +139,7 @@ namespace nss2csharp
 
                                 int chStartIndex = chBaseIndex + 2;
                                 int chEndIndex = chScanningIndex - 2;
-                                comment.m_Comment = aggregatedData.Substring(chStartIndex, chEndIndex - chStartIndex);
+                                comment.m_Comment = data.Substring(chStartIndex, chEndIndex - chStartIndex);
 
                                 int chNewBaseIndex = chScanningIndex + 1;
                                 AttachDebugData(comment, debugRanges, chBaseIndex, chNewBaseIndex - 1);
@@ -201,17 +197,17 @@ namespace nss2csharp
                         NssLiteral literal = new NssLiteral();
 
                         bool seenDecimalPlace = false;
-                        while (++chScanningIndex < aggregatedData.Length)
+                        while (++chScanningIndex < data.Length)
                         {
-                            char chScanning = aggregatedData[chScanningIndex];
+                            char chScanning = data[chScanningIndex];
 
                             if (isString)
                             {
                                 // If we're a string, we just scan to the next ", except for escaped ones.
                                 // There might be some weirdness with new lines here - but we'll just ignore them.
-                                char chScanningLast = aggregatedData[chScanningIndex - 1];
+                                char chScanningLast = data[chScanningIndex - 1];
 
-                                bool eof = chScanningIndex == aggregatedData.Length - 1;
+                                bool eof = chScanningIndex == data.Length - 1;
                                 bool atQuotes = chScanning == '"' && chScanningLast != '\\';
 
                                 if (eof || atQuotes)
@@ -219,7 +215,7 @@ namespace nss2csharp
                                     literal.m_LiteralType = NssLiteralType.String;
 
                                     int chStartIndex = chBaseIndex;
-                                    int chEndIndex = eof ? chScanningIndex : chScanningIndex + 1;
+                                    int chEndIndex = chScanningIndex + 1;
 
                                     if (chStartIndex == chEndIndex)
                                     {
@@ -227,10 +223,10 @@ namespace nss2csharp
                                     }
                                     else
                                     {
-                                        literal.m_Literal = aggregatedData.Substring(chStartIndex, chEndIndex - chStartIndex);
+                                        literal.m_Literal = data.Substring(chStartIndex, chEndIndex - chStartIndex);
                                     }
 
-                                    int chNewBaseIndex = chScanningIndex + 1;
+                                    int chNewBaseIndex = chScanningIndex + (eof ? 2 : 1);
                                     AttachDebugData(literal, debugRanges, chBaseIndex, chNewBaseIndex - 1);
 
                                     chBaseIndex = chNewBaseIndex;
@@ -251,7 +247,7 @@ namespace nss2csharp
 
                                     int chStartIndex = chBaseIndex;
                                     int chEndIndex = chScanningIndex;
-                                    literal.m_Literal = aggregatedData.Substring(chStartIndex, chEndIndex - chStartIndex);
+                                    literal.m_Literal = data.Substring(chStartIndex, chEndIndex - chStartIndex);
 
                                     int chNewBaseIndex = chScanningIndex;
                                     AttachDebugData(literal, debugRanges, chBaseIndex, chNewBaseIndex - 1);
@@ -274,12 +270,12 @@ namespace nss2csharp
 
                         foreach (KeyValuePair<string, NssKeywords> kvp in NssKeyword.Map)
                         {
-                            if (chBaseIndex + kvp.Key.Length >= aggregatedData.Length)
+                            if (chBaseIndex + kvp.Key.Length >= data.Length)
                             {
                                 continue; // This would overrun us.
                             }
 
-                            string strFromData = aggregatedData.Substring(chBaseIndex, kvp.Key.Length);
+                            string strFromData = data.Substring(chBaseIndex, kvp.Key.Length);
                             if (strFromData == kvp.Key)
                             {
                                 NssKeyword keyword = new NssKeyword();
@@ -304,25 +300,33 @@ namespace nss2csharp
 
                 { // IDENTIFIERS
                     int chScanningIndex = chBaseIndex;
-                    while (++chScanningIndex < aggregatedData.Length)
+                    bool eof;
+
+                    do
                     {
-                        char chScanning = aggregatedData[chScanningIndex];
-                        if (NssSeparator.Map.ContainsKey(chScanning))
+                        eof = chScanningIndex >= data.Length - 1;
+
+                        char chScanning = data[chScanningIndex];
+                        bool hasSeparator = NssSeparator.Map.ContainsKey(chScanning);
+
+                        if (eof || hasSeparator)
                         {
                             NssIdentifier identifier = new NssIdentifier();
 
                             int chStartIndex = chBaseIndex;
-                            int chEndIndex = chScanningIndex;
-                            identifier.m_Identifier = aggregatedData.Substring(chStartIndex, chEndIndex - chStartIndex);
+                            int chEndIndex = chScanningIndex + (eof ? 1 : 0);
+                            identifier.m_Identifier = data.Substring(chStartIndex, chEndIndex - chStartIndex);
 
-                            int chNewBaseIndex = chScanningIndex;
+                            int chNewBaseIndex = chScanningIndex + (eof ? 1 : 0);
                             AttachDebugData(identifier, debugRanges, chBaseIndex, chNewBaseIndex - 1);
 
                             Tokens.Add(identifier);
                             chBaseIndex = chNewBaseIndex;
                             break;
                         }
-                    }
+
+                        ++chScanningIndex;
+                    } while (eof || chScanningIndex < data.Length);
                 }
             }
 
