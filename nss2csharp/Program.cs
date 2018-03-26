@@ -34,8 +34,7 @@ namespace nss2csharp
                 if (File.Exists(script))
                 {
                     NssLexicalAnalysis analysis = new NssLexicalAnalysis();
-                    List<NssLexToken> lexTokens;
-                    int err = analysis.Analyse(File.ReadAllLines(script).Select(str => str + "\n"), out lexTokens);
+                    int err = analysis.Analyse(File.ReadAllLines(script).Select(str => str + "\n"));
                     if (err != 0)
                     {
                         Console.Error.WriteLine("Failed to analyse {0} due to error {1}", script, err);
@@ -43,7 +42,7 @@ namespace nss2csharp
 
                     NssParser parser = new NssParser();
                     NssCompilationUnit cu;
-                    err = parser.Parse(Path.GetFileName(script), lexTokens, out cu);
+                    err = parser.Parse(Path.GetFileName(script), analysis.Tokens, out cu);
                     if (err != 0)
                     {
                         Console.Error.WriteLine("Failed to parse {0} due to error {1}", script, err);

@@ -188,10 +188,10 @@ namespace nss2csharp
 
     public class NssLexicalAnalysis
     {
-        public int Analyse(IEnumerable<string> data, out List<NssLexToken> tokens)
-        {
-            tokens = new List<NssLexToken>();
+        public List<NssLexToken> Tokens { get; private set; }
 
+        public int Analyse(IEnumerable<string> data)
+        {
             // Combine everything into a flat string that we can process more easily.
             string aggregatedData = data.Aggregate((a, b) => a + b);
 
@@ -218,7 +218,7 @@ namespace nss2csharp
                                 preprocessor.m_PreprocessorType = NssLexPreprocessorType.Unknown;
                                 int length = eof ? chScanningIndex - chBaseIndex : chScanningIndex - chBaseIndex - 1;
                                 preprocessor.m_Data = aggregatedData.Substring(chBaseIndex + 1, length);
-                                tokens.Add(preprocessor);
+                                Tokens.Add(preprocessor);
                                 chBaseIndex = eof ? chScanningIndex + 1 : chScanningIndex;
                                 break;
                             }
@@ -254,7 +254,7 @@ namespace nss2csharp
                                         comment.m_CommentType = NssLexCommentType.LineComment;
                                         int length = eof ? chScanningIndex - chNextIndex : chScanningIndex - chNextIndex - 1;
                                         comment.m_Comment = aggregatedData.Substring(chNextIndex + 1, length);
-                                        tokens.Add(comment);
+                                        Tokens.Add(comment);
                                         chBaseIndex = eof ? chScanningIndex + 1 : chScanningIndex;
                                         break;
                                     }
@@ -283,7 +283,7 @@ namespace nss2csharp
                                 NssLexComment comment = new NssLexComment();
                                 comment.m_CommentType = NssLexCommentType.BlockComment;
                                 comment.m_Comment = aggregatedData.Substring(chBaseIndex + 2, chScanningIndex - chBaseIndex - 4);
-                                tokens.Add(comment);
+                                Tokens.Add(comment);
                                 chBaseIndex = chScanningIndex + 1;
                                 foundComment = true;
                             }
@@ -299,7 +299,7 @@ namespace nss2csharp
                 { // SEPARATORS
                     if (NssLexSeparator.Map.ContainsKey(ch))
                     {
-                        tokens.Add(new NssLexSeparator { m_Separator = NssLexSeparator.Map[ch] });
+                        Tokens.Add(new NssLexSeparator { m_Separator = NssLexSeparator.Map[ch] });
                         ++chBaseIndex;
                         continue;
                     }
@@ -308,7 +308,7 @@ namespace nss2csharp
                 { // OPERATORS
                     if (NssLexOperator.Map.ContainsKey(ch))
                     {
-                        tokens.Add(new NssLexOperator { m_Operator = NssLexOperator.Map[ch] });
+                        Tokens.Add(new NssLexOperator { m_Operator = NssLexOperator.Map[ch] });
                         ++chBaseIndex;
                         continue;
                     }
@@ -359,13 +359,13 @@ namespace nss2csharp
                             }
                         }
 
-                        tokens.Add(literal);
+                        Tokens.Add(literal);
                         continue;
                     }
                 }
 
                 { // KEYWORDS
-                    if (tokens.Count == 0 || tokens.Last().GetType() == typeof(NssLexSeparator))
+                    if (Tokens.Count == 0 || Tokens.Last().GetType() == typeof(NssLexSeparator))
                     {
                         bool foundKeyword = false;
 
@@ -379,7 +379,7 @@ namespace nss2csharp
                             string strFromData = aggregatedData.Substring(chBaseIndex, kvp.Key.Length);
                             if (strFromData == kvp.Key)
                             {
-                                tokens.Add(new NssLexKeyword { m_Keyword = kvp.Value });
+                                Tokens.Add(new NssLexKeyword { m_Keyword = kvp.Value });
                                 chBaseIndex += kvp.Key.Length;
                                 foundKeyword = true;
                                 break;
@@ -401,7 +401,7 @@ namespace nss2csharp
                         if (NssLexSeparator.Map.ContainsKey(chScanning))
                         {
                             string literal = aggregatedData.Substring(chBaseIndex, chScanningIndex - chBaseIndex);
-                            tokens.Add(new NssLexIdentifier { m_Identifier = literal });
+                            Tokens.Add(new NssLexIdentifier { m_Identifier = literal });
                             chBaseIndex = chScanningIndex;
                             break;
                         }
