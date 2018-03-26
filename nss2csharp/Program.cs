@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -28,11 +29,15 @@ namespace nss2csharp
                 }
             }
 
+            Stopwatch timer = new Stopwatch();
+
             // Process each file
             foreach (string script in scripts)
             {
                 if (File.Exists(script))
                 {
+                    timer.Restart();
+
                     Console.WriteLine("Loading {0}", script);
                     string[] sourceFile = File.ReadAllLines(script);
 
@@ -51,6 +56,20 @@ namespace nss2csharp
                     }
 
 #if DEBUG
+                    {
+                        int preprocessors = analysis.Tokens.Count(token => token.GetType() == typeof(NssPreprocessor));
+                        int comments = analysis.Tokens.Count(token => token.GetType() == typeof(NssComment));
+                        int separators = analysis.Tokens.Count(token => token.GetType() == typeof(NssSeparator));
+                        int operators = analysis.Tokens.Count(token => token.GetType() == typeof(NssOperator));
+                        int literals = analysis.Tokens.Count(token => token.GetType() == typeof(NssLiteral));
+                        int keywords = analysis.Tokens.Count(token => token.GetType() == typeof(NssKeyword));
+                        int identifiers = analysis.Tokens.Count(token => token.GetType() == typeof(NssIdentifier));
+
+                        Console.WriteLine("DEBUG: Preprocessor: {0} Comments: {1} Separators: {2} " +
+                            "Operators: {3} Literals: {4} Keywords: {5} Identifiers: {6}",
+                            preprocessors, comments, separators, operators, literals, keywords, identifiers);
+                    }
+
                     {
                         Console.WriteLine("DEBUG: Converting tokens back to source and comparing.");
                         Output_Nss debugOutput = new Output_Nss();
@@ -92,6 +111,8 @@ namespace nss2csharp
                                 continue;
                             }
                         }
+
+                        Console.WriteLine("Processed {0} in {1}ms\n", script, timer.ElapsedMilliseconds);
                     }
 #endif
                 }
