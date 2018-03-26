@@ -93,7 +93,7 @@ namespace nss2csharp
 
     public enum NssSeparators
     {
-        Whitespace,
+        Space,
         NewLine,
         OpenParen,
         CloseParen,
@@ -121,7 +121,7 @@ namespace nss2csharp
 
         public static Dictionary<char, NssSeparators> Map = new Dictionary<char, NssSeparators>
         {
-            { ' ',  NssSeparators.Whitespace },
+            { ' ',  NssSeparators.Space },
             { '\n', NssSeparators.NewLine },
             { '(',  NssSeparators.OpenParen },
             { ')',  NssSeparators.CloseParen },

@@ -315,7 +315,7 @@ namespace nss2csharp
                                 if (NssSeparator.Map.ContainsKey(chNextAlong))
                                 {
                                     NssSeparators sep = NssSeparator.Map[chNextAlong];
-                                    if (sep == NssSeparators.Whitespace || sep == NssSeparators.Tab)
+                                    if (sep == NssSeparators.Space || sep == NssSeparators.Tab)
                                     {
                                         NssKeyword keyword = new NssKeyword();
                                         keyword.m_Keyword = kvp.Value;
