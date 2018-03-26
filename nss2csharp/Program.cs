@@ -112,9 +112,10 @@ namespace nss2csharp
                             }
                         }
 
-                        Console.WriteLine("Processed {0} in {1}ms\n", script, timer.ElapsedMilliseconds);
                     }
 #endif
+
+                    Console.WriteLine("Processed in {0}ms\n", timer.ElapsedMilliseconds);
                 }
                 else
                 {
