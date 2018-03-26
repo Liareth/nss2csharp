@@ -26,7 +26,7 @@ namespace nss2csharp
                     debugRanges.Add(range);
 
                     lineNum = range.Line + 1;
-                    cumulativeLen = range.IndexEnd;
+                    cumulativeLen = range.IndexEnd + 1;
                 }
             }
 
