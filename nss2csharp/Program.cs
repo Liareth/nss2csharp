@@ -34,18 +34,12 @@ namespace nss2csharp
                 if (File.Exists(script))
                 {
                     Lexer_Nss analysis = new Lexer_Nss();
+
+                    Console.WriteLine("Analysing {0}", script);
                     int err = analysis.Analyse(File.ReadAllLines(script).Select(str => str + "\n"));
                     if (err != 0)
                     {
                         Console.Error.WriteLine("Failed to analyse {0} due to error {1}", script, err);
-                    }
-
-                    NssParser parser = new NssParser();
-                    NssCompilationUnit cu;
-                    err = parser.Parse(Path.GetFileName(script), analysis.Tokens, out cu);
-                    if (err != 0)
-                    {
-                        Console.Error.WriteLine("Failed to parse {0} due to error {1}", script, err);
                     }
                 }
                 else
