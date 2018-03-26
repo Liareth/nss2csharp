@@ -486,8 +486,28 @@ namespace nss2csharp
 
     public class Program
     {
-        static void Main(string[] scripts)
+        static void Main(string[] scriptsRawArr)
         {
+            List<string> scripts = scriptsRawArr.ToList();
+
+            // Expand wildcards
+            for (int i = scripts.Count - 1; i >= 0; --i)
+            {
+                string script = scripts[i];
+                string directory = Path.GetDirectoryName(script);
+                string fileName = Path.GetFileName(script);
+
+                if (fileName.Contains("*"))
+                {
+                    scripts.RemoveAt(i);
+                    foreach (string expanded in Directory.GetFiles(directory, fileName))
+                    {
+                        scripts.Add(expanded);
+                    }
+                }
+            }
+
+            // Process each file
             foreach (string script in scripts)
             {
                 if (File.Exists(script))
