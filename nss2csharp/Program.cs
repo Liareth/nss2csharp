@@ -33,15 +33,20 @@ namespace nss2csharp
             {
                 if (File.Exists(script))
                 {
-                    Lexer_Nss analysis = new Lexer_Nss();
-
-                    Console.WriteLine("Analysing {0}", script);
-
+                    Console.WriteLine("Loading {0}", script);
                     string[] sourceFile = File.ReadAllLines(script);
+
+                    if (sourceFile.Length == 0)
+                    {
+                        Console.WriteLine("Source file empty, skipping.");
+                        continue;
+                    }
+
+                    Lexer_Nss analysis = new Lexer_Nss();
                     int err = analysis.Analyse(sourceFile.Aggregate((a, b) => a + "\n" + b));
                     if (err != 0)
                     {
-                        Console.Error.WriteLine("Failed to analyse {0} due to error {1}", script, err);
+                        Console.Error.WriteLine("Failed due to error {1}", err);
                         continue;
                     }
 
