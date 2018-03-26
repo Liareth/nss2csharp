@@ -38,82 +38,103 @@ namespace nss2csharp
                 {
                     timer.Restart();
 
-                    Console.WriteLine("Loading {0}", script);
-                    string[] sourceFile = File.ReadAllLines(script);
-
-                    if (sourceFile.Length == 0)
+                    do
                     {
-                        Console.WriteLine("Source file empty, skipping.");
-                        continue;
-                    }
+                        Console.WriteLine("Loading {0}", script);
+                        string[] sourceFile = File.ReadAllLines(script);
 
-                    Lexer_Nss analysis = new Lexer_Nss();
-                    int err = analysis.Analyse(sourceFile.Aggregate((a, b) => a + "\n" + b));
-                    if (err != 0)
-                    {
-                        Console.Error.WriteLine("Failed due to error {1}", err);
-                        continue;
-                    }
+                        if (sourceFile.Length == 0)
+                        {
+                            Console.WriteLine("Source file empty, skipping.");
+                            continue;
+                        }
 
-#if DEBUG
-                    {
-                        int preprocessors = analysis.Tokens.Count(token => token.GetType() == typeof(NssPreprocessor));
-                        int comments = analysis.Tokens.Count(token => token.GetType() == typeof(NssComment));
-                        int separators = analysis.Tokens.Count(token => token.GetType() == typeof(NssSeparator));
-                        int operators = analysis.Tokens.Count(token => token.GetType() == typeof(NssOperator));
-                        int literals = analysis.Tokens.Count(token => token.GetType() == typeof(NssLiteral));
-                        int keywords = analysis.Tokens.Count(token => token.GetType() == typeof(NssKeyword));
-                        int identifiers = analysis.Tokens.Count(token => token.GetType() == typeof(NssIdentifier));
-
-                        Console.WriteLine("DEBUG: Preprocessor: {0} Comments: {1} Separators: {2} " +
-                            "Operators: {3} Literals: {4} Keywords: {5} Identifiers: {6}",
-                            preprocessors, comments, separators, operators, literals, keywords, identifiers);
-                    }
-
-                    {
-                        Console.WriteLine("DEBUG: Converting tokens back to source and comparing.");
-                        Output_Nss debugOutput = new Output_Nss();
-
-                        string data;
-                        err = debugOutput.GetFromTokens(analysis.Tokens, out data);
+                        Console.WriteLine("Running lexical analysis.");
+                        Lexer_Nss analysis = new Lexer_Nss();
+                        int err = analysis.Analyse(sourceFile.Aggregate((a, b) => a + "\n" + b));
                         if (err != 0)
                         {
-                            Console.Error.WriteLine("DEBUG: Failed due to error {0}", err);
+                            Console.Error.WriteLine("Failed due to error {1}", err);
                             continue;
                         }
 
-                        string[] reformattedData = data.Split('\n');
-
-                        int sourceLines = sourceFile.Count();
-                        int dataLines = reformattedData.Count();
-
-                        if (sourceLines != dataLines)
+#if DEBUG
                         {
-                            Console.Error.WriteLine("DEBUG: Failed due to mismatch in line count. " +
-                                "Source: {0}, Data: {1}", sourceLines, dataLines);
+                            int preprocessors = analysis.Tokens.Count(token => token.GetType() == typeof(NssPreprocessor));
+                            int comments = analysis.Tokens.Count(token => token.GetType() == typeof(NssComment));
+                            int separators = analysis.Tokens.Count(token => token.GetType() == typeof(NssSeparator));
+                            int operators = analysis.Tokens.Count(token => token.GetType() == typeof(NssOperator));
+                            int literals = analysis.Tokens.Count(token => token.GetType() == typeof(NssLiteral));
+                            int keywords = analysis.Tokens.Count(token => token.GetType() == typeof(NssKeyword));
+                            int identifiers = analysis.Tokens.Count(token => token.GetType() == typeof(NssIdentifier));
 
-                            continue;
+                            Console.WriteLine("DEBUG: Preprocessor: {0} Comments: {1} Separators: {2} " +
+                                "Operators: {3} Literals: {4} Keywords: {5} Identifiers: {6}",
+                                preprocessors, comments, separators, operators, literals, keywords, identifiers);
                         }
 
-                        for (int i = 0; i < sourceFile.Length; ++i)
                         {
-                            string sourceLine = sourceFile[i];
-                            string dataLine = reformattedData[i];
+                            Console.WriteLine("DEBUG: Converting tokens back to source and comparing.");
+                            Output_Nss debugOutput = new Output_Nss();
 
-                            if (sourceLine != dataLine)
+                            string data;
+                            err = debugOutput.GetFromTokens(analysis.Tokens, out data);
+                            if (err != 0)
                             {
-                                Console.Error.WriteLine("DEBUG: Failed due to mismatch in line contents. " +
-                                    "Line {0}.\n" +
-                                    "Source line len: {1}\nData line len:   {2}\n" +
-                                    "Source line: {3}\nData line:   {4}",
-                                    i, sourceLine.Length, dataLine.Length, sourceLine, dataLine);
+                                Console.Error.WriteLine("DEBUG: Failed due to error {0}", err);
+                                continue;
+                            }
+
+                            string[] reformattedData = data.Split('\n');
+
+                            int sourceLines = sourceFile.Count();
+                            int dataLines = reformattedData.Count();
+
+                            if (sourceLines != dataLines)
+                            {
+                                Console.Error.WriteLine("DEBUG: Failed due to mismatch in line count. " +
+                                    "Source: {0}, Data: {1}", sourceLines, dataLines);
 
                                 continue;
                             }
-                        }
 
-                    }
+                            for (int i = 0; i < sourceFile.Length; ++i)
+                            {
+                                string sourceLine = sourceFile[i];
+                                string dataLine = reformattedData[i];
+
+                                if (sourceLine != dataLine)
+                                {
+                                    Console.Error.WriteLine("DEBUG: Failed due to mismatch in line contents. " +
+                                        "Line {0}.\n" +
+                                        "Source line len: {1}\nData line len:   {2}\n" +
+                                        "Source line: {3}\nData line:   {4}",
+                                        i, sourceLine.Length, dataLine.Length, sourceLine, dataLine);
+
+                                    continue;
+                                }
+                            }
+
+                        }
 #endif
+
+                        Console.WriteLine("Running parser.");
+                        Parser_Nss parser = new Parser_Nss();
+                        err = parser.Parse(Path.GetFileName(script), analysis.Tokens);
+                        if (err != 0)
+                        {
+                            Console.Error.WriteLine("Failed due to error {0}", err);
+                            foreach (string errStr in parser.Errors)
+                            {
+                                Console.Error.WriteLine("===============================");
+                                Console.Error.WriteLine("  {0}", errStr);
+                                Console.Error.WriteLine("===============================");
+                            }
+
+                            continue;
+                        }
+                    }
+                    while (false);
 
                     Console.WriteLine("Processed in {0}ms\n", timer.ElapsedMilliseconds);
                 }
