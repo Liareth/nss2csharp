@@ -35,7 +35,7 @@ namespace nss2csharp
                 {
                     NssLexicalAnalysis analysis = new NssLexicalAnalysis();
                     List<NssLexToken> lexTokens;
-                    int err = analysis.Analyse(File.ReadAllLines(script), out lexTokens);
+                    int err = analysis.Analyse(File.ReadAllLines(script).Select(str => str + "\n"), out lexTokens);
                     if (err != 0)
                     {
                         Console.Error.WriteLine("Failed to analyse {0} due to error {1}", script, err);

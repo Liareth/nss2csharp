@@ -188,12 +188,12 @@ namespace nss2csharp
 
     public class NssLexicalAnalysis
     {
-        public int Analyse(string[] data, out List<NssLexToken> tokens)
+        public int Analyse(IEnumerable<string> data, out List<NssLexToken> tokens)
         {
             tokens = new List<NssLexToken>();
 
-            // We're given lines without line endings - so let's add them.
-            string aggregatedData = data.Aggregate((a, b) => a + "\n" + b);
+            // Combine everything into a flat string that we can process more easily.
+            string aggregatedData = data.Aggregate((a, b) => a + b);
 
             int chBaseIndex = 0;
             while (chBaseIndex < aggregatedData.Length)
