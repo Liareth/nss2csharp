@@ -33,7 +33,7 @@ namespace nss2csharp
             {
                 if (File.Exists(script))
                 {
-                    NssLexicalAnalysis analysis = new NssLexicalAnalysis();
+                    Lexer_Nss analysis = new Lexer_Nss();
                     int err = analysis.Analyse(File.ReadAllLines(script).Select(str => str + "\n"));
                     if (err != 0)
                     {
