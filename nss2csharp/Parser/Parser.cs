@@ -62,7 +62,7 @@ namespace nss2csharp
 
     public class NssParser
     {
-        public int Parse(string name, List<NssLexToken> tokens, out NssCompilationUnit cu)
+        public int Parse(string name, List<NssToken> tokens, out NssCompilationUnit cu)
         {
             cu = new NssCompilationUnit();
             cu.m_Name = name;

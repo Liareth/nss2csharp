@@ -5,7 +5,7 @@ namespace nss2csharp
 {
     class Output_Nss : IOutput
     {
-        public int GetFromTokens(IEnumerable<NssLexToken> tokens, out string data)
+        public int GetFromTokens(IEnumerable<IToken> tokens, out string data)
         {
             throw new NotImplementedException();
         }

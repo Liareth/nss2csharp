@@ -3,192 +3,9 @@ using System.Linq;
 
 namespace nss2csharp
 {
-    public class NssLexToken
-    {
-
-    }
-
-    public enum NssLexKeywords
-    {
-        If,
-        Else,
-        For,
-        While,
-        Do,
-        Switch,
-        Break,
-        Return,
-        Case,
-        Const,
-        Void,
-        Int,
-        Float,
-        String,
-        Struct,
-        Object,
-        Location,
-        Vector,
-        ItemProperty,
-        Effect
-    }
-
-    public class NssLexKeyword : NssLexToken
-    {
-        public override string ToString() { return "[Keyword] " + m_Keyword.ToString(); }
-
-        public static Dictionary<string, NssLexKeywords> Map = new Dictionary<string, NssLexKeywords>
-        {
-            { "if",           NssLexKeywords.If },
-            { "else",         NssLexKeywords.Else },
-            { "for",          NssLexKeywords.For },
-            { "while",        NssLexKeywords.While },
-            { "switch",       NssLexKeywords.Switch },
-            { "break",        NssLexKeywords.Break },
-            { "return",       NssLexKeywords.Return },
-            { "case",         NssLexKeywords.Case },
-            { "const",        NssLexKeywords.Const },
-            { "void",         NssLexKeywords.Void },
-            { "int",          NssLexKeywords.Int },
-            { "float",        NssLexKeywords.Float },
-            { "string",       NssLexKeywords.String },
-            { "object",       NssLexKeywords.Object },
-            { "location",     NssLexKeywords.Location },
-            { "vector",       NssLexKeywords.Vector },
-            { "itemproperty", NssLexKeywords.ItemProperty },
-            { "effect",       NssLexKeywords.Effect },
-        };
-
-        public NssLexKeywords m_Keyword;
-    }
-
-    public class NssLexIdentifier : NssLexToken
-    {
-        public override string ToString() { return "[Identifier] " + m_Identifier; }
-
-        public string m_Identifier;
-    }
-
-    public enum NssLexSeparators
-    {
-        Whitespace,
-        NewLine,
-        OpenParen,
-        CloseParen,
-        OpenCurlyBrace,
-        CloseCurlyBrace,
-        Semicolon,
-        Tab,
-        Comma
-    }
-
-    public class NssLexSeparator : NssLexToken
-    {
-        public override string ToString() { return "[Separator] " + m_Separator.ToString(); }
-
-        public static Dictionary<char, NssLexSeparators> Map = new Dictionary<char, NssLexSeparators>
-        {
-            { ' ',  NssLexSeparators.Whitespace },
-            { '\n', NssLexSeparators.NewLine },
-            { '(',  NssLexSeparators.OpenParen },
-            { ')',  NssLexSeparators.CloseParen },
-            { '{',  NssLexSeparators.OpenCurlyBrace },
-            { '}',  NssLexSeparators.CloseCurlyBrace },
-            { ';',  NssLexSeparators.Semicolon },
-            { '\t', NssLexSeparators.Tab },
-            { ',',  NssLexSeparators.Comma }
-        };
-
-        public NssLexSeparators m_Separator;
-    }
-
-    public enum NssLexOperators
-    {
-        Addition,
-        Subtraction,
-        Division,
-        Multiplication,
-        Modulo,
-        And,
-        Or,
-        Not,
-        Inversion,
-        GreaterThan,
-        LessThan,
-        Equals,
-        TernaryQuestionMark,
-        TernaryColon,
-    }
-
-    public class NssLexOperator : NssLexToken
-    {
-        public override string ToString() { return "[Operator] " + m_Operator.ToString(); }
-
-        public static Dictionary<char, NssLexOperators> Map = new Dictionary<char, NssLexOperators>
-        {
-            { '+',  NssLexOperators.Addition },
-            { '-',  NssLexOperators.Subtraction },
-            { '/',  NssLexOperators.Division },
-            { '*',  NssLexOperators.Multiplication },
-            { '%',  NssLexOperators.Modulo },
-            { '&',  NssLexOperators.And },
-            { '|',  NssLexOperators.Or },
-            { '!',  NssLexOperators.Not },
-            { '~',  NssLexOperators.Inversion },
-            { '>',  NssLexOperators.GreaterThan },
-            { '<',  NssLexOperators.LessThan },
-            { '=',  NssLexOperators.Equals },
-            { '?',  NssLexOperators.TernaryQuestionMark },
-            { ':',  NssLexOperators.TernaryColon },
-        };
-
-        public NssLexOperators m_Operator;
-    }
-
-    public enum NssLexLiteralType
-    {
-        Int,
-        Float,
-        String,
-    }
-
-    public class NssLexLiteral : NssLexToken
-    {
-        public override string ToString() { return "[Literal] " + m_LiteralType.ToString() + ": " + m_Literal; }
-
-        public NssLexLiteralType m_LiteralType;
-        public string m_Literal;
-    }
-
-    public enum NssLexCommentType
-    {
-        LineComment,
-        BlockComment
-    }
-
-    public class NssLexComment : NssLexToken
-    {
-        public override string ToString() { return "[Comment] " + m_CommentType.ToString() + ": " + m_Comment; }
-
-        public NssLexCommentType m_CommentType;
-        public string m_Comment;
-    }
-
-    public enum NssLexPreprocessorType
-    {
-        Unknown
-    }
-
-    public class NssLexPreprocessor : NssLexToken
-    {
-        public override string ToString() { return "[Preprocessor] " + m_PreprocessorType.ToString() + ": " + m_Data; }
-
-        public NssLexPreprocessorType m_PreprocessorType;
-        public string m_Data;
-    }
-
     public class NssLexicalAnalysis
     {
-        public List<NssLexToken> Tokens { get; private set; }
+        public List<NssToken> Tokens { get; private set; }
 
         public int Analyse(IEnumerable<string> data)
         {
@@ -210,12 +27,12 @@ namespace nss2csharp
                             char chScanning = aggregatedData[chScanningIndex];
 
                             bool eof = chScanningIndex == aggregatedData.Length - 1;
-                            bool newLine = NssLexSeparator.Map.ContainsKey(chScanning) && NssLexSeparator.Map[chScanning] == NssLexSeparators.NewLine;
+                            bool newLine = NssSeparator.Map.ContainsKey(chScanning) && NssSeparator.Map[chScanning] == NssSeparators.NewLine;
 
                             if (eof || newLine)
                             {
-                                NssLexPreprocessor preprocessor = new NssLexPreprocessor();
-                                preprocessor.m_PreprocessorType = NssLexPreprocessorType.Unknown;
+                                NssPreprocessor preprocessor = new NssPreprocessor();
+                                preprocessor.m_PreprocessorType = NssPreprocessorType.Unknown;
                                 int length = eof ? chScanningIndex - chBaseIndex : chScanningIndex - chBaseIndex - 1;
                                 preprocessor.m_Data = aggregatedData.Substring(chBaseIndex + 1, length);
                                 Tokens.Add(preprocessor);
@@ -246,12 +63,12 @@ namespace nss2csharp
                                     char chScanning = aggregatedData[chScanningIndex];
 
                                     bool eof = chScanningIndex == aggregatedData.Length - 1;
-                                    bool newLine = NssLexSeparator.Map.ContainsKey(chScanning) && NssLexSeparator.Map[chScanning] == NssLexSeparators.NewLine;
+                                    bool newLine = NssSeparator.Map.ContainsKey(chScanning) && NssSeparator.Map[chScanning] == NssSeparators.NewLine;
 
                                     if (eof || newLine)
                                     {
-                                        NssLexComment comment = new NssLexComment();
-                                        comment.m_CommentType = NssLexCommentType.LineComment;
+                                        NssComment comment = new NssComment();
+                                        comment.m_CommentType = NssCommentType.LineComment;
                                         int length = eof ? chScanningIndex - chNextIndex : chScanningIndex - chNextIndex - 1;
                                         comment.m_Comment = aggregatedData.Substring(chNextIndex + 1, length);
                                         Tokens.Add(comment);
@@ -280,8 +97,8 @@ namespace nss2csharp
                                 }
 
 
-                                NssLexComment comment = new NssLexComment();
-                                comment.m_CommentType = NssLexCommentType.BlockComment;
+                                NssComment comment = new NssComment();
+                                comment.m_CommentType = NssCommentType.BlockComment;
                                 comment.m_Comment = aggregatedData.Substring(chBaseIndex + 2, chScanningIndex - chBaseIndex - 4);
                                 Tokens.Add(comment);
                                 chBaseIndex = chScanningIndex + 1;
@@ -297,18 +114,18 @@ namespace nss2csharp
                 }
 
                 { // SEPARATORS
-                    if (NssLexSeparator.Map.ContainsKey(ch))
+                    if (NssSeparator.Map.ContainsKey(ch))
                     {
-                        Tokens.Add(new NssLexSeparator { m_Separator = NssLexSeparator.Map[ch] });
+                        Tokens.Add(new NssSeparator { m_Separator = NssSeparator.Map[ch] });
                         ++chBaseIndex;
                         continue;
                     }
                 }
 
                 { // OPERATORS
-                    if (NssLexOperator.Map.ContainsKey(ch))
+                    if (NssOperator.Map.ContainsKey(ch))
                     {
-                        Tokens.Add(new NssLexOperator { m_Operator = NssLexOperator.Map[ch] });
+                        Tokens.Add(new NssOperator { m_Operator = NssOperator.Map[ch] });
                         ++chBaseIndex;
                         continue;
                     }
@@ -321,7 +138,7 @@ namespace nss2csharp
                     bool isNumber = char.IsNumber(ch);
                     if (isString || isNumber)
                     {
-                        NssLexLiteral literal = new NssLexLiteral();
+                        NssLiteral literal = new NssLiteral();
 
                         bool seenDecimalPlace = false;
                         while (++chScanningIndex < aggregatedData.Length)
@@ -335,7 +152,7 @@ namespace nss2csharp
                                 char chScanningLast = aggregatedData[chScanningIndex - 1];
                                 if (chScanning == '"' && chScanningLast != '\\')
                                 {
-                                    literal.m_LiteralType = NssLexLiteralType.String;
+                                    literal.m_LiteralType = NssLiteralType.String;
                                     literal.m_Literal = aggregatedData.Substring(chBaseIndex + 1, chScanningIndex - chBaseIndex - 1);
                                     chBaseIndex = chScanningIndex + 1;
                                     break;
@@ -351,7 +168,7 @@ namespace nss2csharp
                                 }
                                 else if (!char.IsNumber(chScanning))
                                 {
-                                    literal.m_LiteralType = seenDecimalPlace ? NssLexLiteralType.Float : NssLexLiteralType.Int;
+                                    literal.m_LiteralType = seenDecimalPlace ? NssLiteralType.Float : NssLiteralType.Int;
                                     literal.m_Literal = aggregatedData.Substring(chBaseIndex, chScanningIndex - chBaseIndex);
                                     chBaseIndex = chScanningIndex;
                                     break;
@@ -365,11 +182,11 @@ namespace nss2csharp
                 }
 
                 { // KEYWORDS
-                    if (Tokens.Count == 0 || Tokens.Last().GetType() == typeof(NssLexSeparator))
+                    if (Tokens.Count == 0 || Tokens.Last().GetType() == typeof(NssSeparator))
                     {
                         bool foundKeyword = false;
 
-                        foreach (KeyValuePair<string, NssLexKeywords> kvp in NssLexKeyword.Map)
+                        foreach (KeyValuePair<string, NssKeywords> kvp in NssKeyword.Map)
                         {
                             if (chBaseIndex + kvp.Key.Length >= aggregatedData.Length)
                             {
@@ -379,7 +196,7 @@ namespace nss2csharp
                             string strFromData = aggregatedData.Substring(chBaseIndex, kvp.Key.Length);
                             if (strFromData == kvp.Key)
                             {
-                                Tokens.Add(new NssLexKeyword { m_Keyword = kvp.Value });
+                                Tokens.Add(new NssKeyword { m_Keyword = kvp.Value });
                                 chBaseIndex += kvp.Key.Length;
                                 foundKeyword = true;
                                 break;
@@ -398,10 +215,10 @@ namespace nss2csharp
                     while (++chScanningIndex < aggregatedData.Length)
                     {
                         char chScanning = aggregatedData[chScanningIndex];
-                        if (NssLexSeparator.Map.ContainsKey(chScanning))
+                        if (NssSeparator.Map.ContainsKey(chScanning))
                         {
                             string literal = aggregatedData.Substring(chBaseIndex, chScanningIndex - chBaseIndex);
-                            Tokens.Add(new NssLexIdentifier { m_Identifier = literal });
+                            Tokens.Add(new NssIdentifier { m_Identifier = literal });
                             chBaseIndex = chScanningIndex;
                             break;
                         }
