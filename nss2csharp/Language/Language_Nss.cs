@@ -223,7 +223,7 @@ namespace nss2csharp
             }
             else if (m_CommentType == NssCommentType.BlockComment)
             {
-                return "/*" + m_Comment + "*/";
+                return "/*" + m_Comment + (m_Terminated ? "*/" : "");
             }
 
             return null;
@@ -231,6 +231,7 @@ namespace nss2csharp
 
         public NssCommentType m_CommentType;
         public string m_Comment;
+        public bool m_Terminated; // If a block style comment, whether it was actually terminated
     }
 
     public enum NssPreprocessorType

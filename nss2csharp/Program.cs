@@ -82,7 +82,7 @@ namespace nss2csharp
                                     "Line {0}.\n" +
                                     "Source line len: {1}\nData line len:   {2}\n" +
                                     "Source line: {3}\nData line:   {4}",
-                                    i, sourceLine.Length, dataLine.Length, dataLine, dataLine);
+                                    i, sourceLine.Length, dataLine.Length, sourceLine, dataLine);
 
                                 continue;
                             }
