@@ -70,6 +70,8 @@ namespace nss2csharp
                     chBaseIndex = Identifier(chBaseIndex, data);
                     if (chBaseIndex != chBaseIndexLast) continue;
                 }
+
+                return 1;
             }
 
             return 0;
