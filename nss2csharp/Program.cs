@@ -46,7 +46,7 @@ namespace nss2csharp
                         if (sourceFile.Length == 0)
                         {
                             Console.WriteLine("Source file empty, skipping.");
-                            continue;
+                            break;
                         }
 
                         Console.WriteLine("Running lexical analysis.");
@@ -55,7 +55,7 @@ namespace nss2csharp
                         if (err != 0)
                         {
                             Console.Error.WriteLine("Failed due to error {1}", err);
-                            continue;
+                            break;
                         }
 
 #if DEBUG
@@ -82,7 +82,7 @@ namespace nss2csharp
                             if (err != 0)
                             {
                                 Console.Error.WriteLine("DEBUG: Failed due to error {0}", err);
-                                continue;
+                                break;
                             }
 
                             string[] reformattedData = data.Split('\n');
@@ -95,7 +95,7 @@ namespace nss2csharp
                                 Console.Error.WriteLine("DEBUG: Failed due to mismatch in line count. " +
                                     "Source: {0}, Data: {1}", sourceLines, dataLines);
 
-                                continue;
+                                break;
                             }
 
                             for (int i = 0; i < sourceFile.Length; ++i)
@@ -111,7 +111,7 @@ namespace nss2csharp
                                         "Source line: {3}\nData line:   {4}",
                                         i, sourceLine.Length, dataLine.Length, sourceLine, dataLine);
 
-                                    continue;
+                                    break;
                                 }
                             }
 
@@ -126,12 +126,10 @@ namespace nss2csharp
                             Console.Error.WriteLine("Failed due to error {0}", err);
                             foreach (string errStr in parser.Errors)
                             {
-                                Console.Error.WriteLine("===============================");
                                 Console.Error.WriteLine("  {0}", errStr);
-                                Console.Error.WriteLine("===============================");
                             }
 
-                            continue;
+                            break;
                         }
                     }
                     while (false);
