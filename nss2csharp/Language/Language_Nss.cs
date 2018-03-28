@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace nss2csharp
+namespace nss2csharp.Language
 {
     public class NssToken : IToken
     {

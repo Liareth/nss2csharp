@@ -1,8 +1,10 @@
-﻿using System;
+﻿using nss2csharp.Language;
+using nss2csharp.Parser;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace nss2csharp
+namespace nss2csharp.Output
 {
     class Output_Nss : IOutput
     {

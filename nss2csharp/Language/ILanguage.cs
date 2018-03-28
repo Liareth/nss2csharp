@@ -1,4 +1,4 @@
-﻿namespace nss2csharp
+﻿namespace nss2csharp.Language
 {
     public interface IToken
     {

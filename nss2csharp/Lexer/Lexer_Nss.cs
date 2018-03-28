@@ -1,8 +1,9 @@
-﻿using System;
+﻿using nss2csharp.Language;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace nss2csharp
+namespace nss2csharp.Lexer
 {
     public class Lexer_Nss
     {

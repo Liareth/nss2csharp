@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using nss2csharp.Language;
+using nss2csharp.Parser;
+using System.Collections.Generic;
 
-namespace nss2csharp
+namespace nss2csharp.Output
 {
     public interface IOutput
     {
