@@ -8,6 +8,6 @@ namespace nss2csharp.Output
     {
         int GetFromTokens(IEnumerable<IToken> tokens, out string data);
 
-        int GetFromCU(NssCompilationUnit cu, out string data);
+        int GetFromCU(CompilationUnit cu, out string data);
     }
 }

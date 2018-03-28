@@ -30,7 +30,7 @@ namespace nss2csharp.Output
             return 0;
         }
 
-        public int GetFromCU(NssCompilationUnit cu, out string data)
+        public int GetFromCU(CompilationUnit cu, out string data)
         {
             data = null;
             return 1;

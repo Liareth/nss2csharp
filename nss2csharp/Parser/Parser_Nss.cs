@@ -1,6 +1,7 @@
 ﻿using nss2csharp.Language;
 using nss2csharp.Lexer;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace nss2csharp.Parser
 {
@@ -17,26 +18,47 @@ namespace nss2csharp.Parser
         Effect
     }
 
-    public class NssNode
+    public class Node
     {
-        public NssNode m_Parent;
-        public List<NssNode> m_Children;
+        public Node m_Parent;
+        public List<Node> m_Children;
         public List<NssToken> m_Tokens; // The tokens that originally comprised this node.
     }
 
-    public struct NssCompilationUnitMetadata
+    public struct CompilationUnitMetadata
     {
         public string m_Name;
     }
 
-    public class NssCompilationUnit : NssNode
+    public class CompilationUnit : Node
     {
-        public NssCompilationUnitMetadata m_Metadata;
+        public CompilationUnitMetadata m_Metadata;
+    }
+
+    public abstract class Preprocessor : Node
+    { }
+
+    public class UnknownPreprocessor : Preprocessor
+    {
+        public string m_Value;
+    }
+
+    public abstract class Comment : Node
+    { }
+
+    public class LineComment : Comment
+    {
+        public string m_Comment;
+    }
+
+    public class BlockComment : Comment
+    {
+        public List<string> m_CommentLines;
     }
 
     public class Parser_Nss
     {
-        public NssCompilationUnit CompilationUnit { get; private set; }
+        public CompilationUnit CompilationUnit { get; private set; }
 
         public List<NssToken> Tokens { get; private set; }
 
@@ -44,12 +66,12 @@ namespace nss2csharp.Parser
 
         public int Parse(string name, List<NssToken> tokens)
         {
-            CompilationUnit = new NssCompilationUnit();
+            CompilationUnit = new CompilationUnit();
             Tokens = tokens;
             Errors = new List<string>();
 
             { // METADATA
-                NssCompilationUnitMetadata metadata = new NssCompilationUnitMetadata();
+                CompilationUnitMetadata metadata = new CompilationUnitMetadata();
                 metadata.m_Name = name;
                 CompilationUnit.m_Metadata = metadata;
             }
@@ -68,7 +90,7 @@ namespace nss2csharp.Parser
             return 0;
         }
 
-        private int Parse(NssNode parent, ref int baseIndexRef)
+        private int Parse(Node parent, ref int baseIndexRef)
         {
             int baseIndexLast = baseIndexRef;
 
@@ -120,19 +142,58 @@ namespace nss2csharp.Parser
             return 1;
         }
 
-        private void ConstructPreprocessor(NssNode parent, ref int baseIndexRef)
+        private Preprocessor ConstructPreprocessor(Node parent, ref int baseIndexRef)
+        {
+            int baseIndex = baseIndexRef;
+            NssToken token;
+
+            int err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssPreprocessor)) return null;
+
+            baseIndexRef = baseIndex;
+
+            return new UnknownPreprocessor
+            {
+                m_Parent = parent,
+                m_Tokens = new List<NssToken> { token },
+                m_Value = ((NssPreprocessor)token).m_Data
+            };
+        }
+
+        private Comment ConstructComment(Node parent, ref int baseIndexRef)
+        {
+            int baseIndex = baseIndexRef;
+            NssToken token;
+
+            int err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssComment)) return null;
+            NssComment commentToken = (NssComment)token;
+
+            Comment comment;
+
+            if (commentToken.m_CommentType == NssCommentType.LineComment)
+            {
+                comment = new LineComment { m_Comment = commentToken.m_Comment };
+            }
+            else
+            {
+                if (!commentToken.m_Terminated) return null;
+                comment = new BlockComment { m_CommentLines = commentToken.m_Comment.Split('\n').ToList() };
+            }
+
+            comment.m_Parent = parent;
+            comment.m_Tokens = new List<NssToken> { token };
+
+            baseIndexRef = baseIndex;
+
+            return comment;
+        }
+
+        private void ConstructFunctionDeclaration(Node parent, ref int baseIndexRef)
         {
         }
 
-        private void ConstructComment(NssNode parent, ref int baseIndexRef)
-        {
-        }
-
-        private void ConstructFunctionDeclaration(NssNode parent, ref int baseIndexRef)
-        {
-        }
-
-        private void ConstructFunctionDefinition(NssNode parent, ref int baseIndexRef)
+        private void ConstructFunctionDefinition(Node parent, ref int baseIndexRef)
         {
             int baseIndex = baseIndexRef;
             NssToken token;
@@ -179,15 +240,15 @@ namespace nss2csharp.Parser
             baseIndexRef = baseIndex;
         }
 
-        private void ConstructUnassignedLvalue(NssNode parent, ref int baseIndexRef)
+        private void ConstructUnassignedLvalue(Node parent, ref int baseIndexRef)
         {
         }
 
-        private void ConstructAssignedLvalue(NssNode parent, ref int baseIndexRef)
+        private void ConstructAssignedLvalue(Node parent, ref int baseIndexRef)
         {
         }
 
-        private void ConstructBlock_r(NssNode parent, ref int baseIndexRef)
+        private void ConstructBlock_r(Node parent, ref int baseIndexRef)
         {
         }
 
@@ -205,7 +266,7 @@ namespace nss2csharp.Parser
             }
         }
 
-        private int TraverseNextToken(out NssToken token, ref int baseIndexRef, bool skipWhitespace = false)
+        private int TraverseNextToken(out NssToken token, ref int baseIndexRef, bool skipWhitespace = true)
         {
             NssToken ret = null;
 
@@ -224,9 +285,13 @@ namespace nss2csharp.Parser
                 if (skipWhitespace)
                 {
                     NssSeparator sep = ret as NssSeparator;
-                    if (sep != null && (sep.m_Separator == NssSeparators.Tab ||sep.m_Separator == NssSeparators.Space))
+                    if (sep != null && (
+                        sep.m_Separator == NssSeparators.Tab ||
+                        sep.m_Separator == NssSeparators.Space ||
+                        sep.m_Separator == NssSeparators.NewLine ))
                     {
                         ret = null;
+                        ++baseIndex;
                         continue;
                     }
                 }
