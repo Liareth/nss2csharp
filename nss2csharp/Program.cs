@@ -124,7 +124,7 @@ namespace nss2csharp
 
                         Console.WriteLine("Running parser.");
                         Parser_Nss parser = new Parser_Nss();
-                        err = parser.Parse(Path.GetFileName(script), analysis.Tokens);
+                        err = parser.Parse(Path.GetFileName(script), sourceFile, analysis.Tokens);
                         if (err != 0)
                         {
                             Console.Error.WriteLine("Failed due to error {0}", err);

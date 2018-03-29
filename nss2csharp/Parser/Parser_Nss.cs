@@ -5,57 +5,6 @@ using System.Linq;
 
 namespace nss2csharp.Parser
 {
-    public enum NssType
-    {
-        Int,
-        Float,
-        String,
-        Struct,
-        Object,
-        Location,
-        Vector,
-        ItemProperty,
-        Effect
-    }
-
-    public class Node
-    {
-        public Node m_Parent;
-        public List<Node> m_Children;
-        public List<NssToken> m_Tokens; // The tokens that originally comprised this node.
-    }
-
-    public struct CompilationUnitMetadata
-    {
-        public string m_Name;
-    }
-
-    public class CompilationUnit : Node
-    {
-        public CompilationUnitMetadata m_Metadata;
-    }
-
-    public abstract class Preprocessor : Node
-    { }
-
-    public class UnknownPreprocessor : Preprocessor
-    {
-        public string m_Value;
-    }
-
-    public abstract class Comment : Node
-    { }
-
-    public class LineComment : Comment
-    {
-        public string m_Comment;
-    }
-
-    public class BlockComment : Comment
-    {
-        public List<string> m_CommentLines;
-    }
-
     public class Parser_Nss
     {
         public CompilationUnit CompilationUnit { get; private set; }
@@ -64,7 +13,7 @@ namespace nss2csharp.Parser
 
         public List<string> Errors { get; private set; }
 
-        public int Parse(string name, List<NssToken> tokens)
+        public int Parse(string name, string[] sourceData, List<NssToken> tokens)
         {
             CompilationUnit = new CompilationUnit();
             Tokens = tokens;
@@ -76,11 +25,17 @@ namespace nss2csharp.Parser
                 CompilationUnit.m_Metadata = metadata;
             }
 
+            { // DEBUG INFO
+                CompilationUnitDebugInfo debugInfo = new CompilationUnitDebugInfo();
+                debugInfo.m_SourceData = sourceData;
+                CompilationUnit.m_DebugInfo = debugInfo;
+            }
+
             for (int baseIndex = 0; baseIndex < tokens.Count; ++baseIndex)
             {
                 int baseIndexLast = baseIndex;
 
-                int err = Parse(CompilationUnit, ref baseIndex);
+                int err = Parse(ref baseIndex);
                 if (err != 0)
                 {
                     return err;
@@ -90,7 +45,7 @@ namespace nss2csharp.Parser
             return 0;
         }
 
-        private int Parse(Node parent, ref int baseIndexRef)
+        private int Parse(ref int baseIndexRef)
         {
             int baseIndexLast = baseIndexRef;
 
@@ -99,32 +54,30 @@ namespace nss2csharp.Parser
             // Here it's valid to have either ...
             // - Preprocessor commands
             // - Comments
-            // - Function declarations
-            // - Function definitions
+            // - Functions (declaration or implementation)
             // - Variables (constant or global)
 
             { // PREPROCESSOR
-                ConstructPreprocessor(parent, ref baseIndexRef);
+                Node node = ConstructPreprocessor(ref baseIndexRef);
+                if (node != null) CompilationUnit.m_Nodes.Add(node);
                 if (baseIndexLast != baseIndexRef) return 0;
             }
 
             { // COMMENT
-                ConstructComment(parent, ref baseIndexRef);
+                Node node = ConstructComment(ref baseIndexRef);
+                if (node != null) CompilationUnit.m_Nodes.Add(node);
                 if (baseIndexLast != baseIndexRef) return 0;
             }
 
-            { // FUNCTION DECLARATION
-                ConstructFunctionDeclaration(parent, ref baseIndexRef);
+            { // FUNCTION
+                Node node = ConstructFunction(ref baseIndexRef);
+                if (node != null) CompilationUnit.m_Nodes.Add(node);
                 if (baseIndexLast != baseIndexRef) return 0;
             }
 
-            { // FUNCTION DEFINITION
-                ConstructFunctionDefinition(parent, ref baseIndexRef);
-                if (baseIndexLast != baseIndexRef) return 0;
-            }
-
-            { // VARIABLE
-                ConstructAssignedLvalue(parent, ref baseIndexRef);
+            { // VARIABLES
+                Node node = ConstructLvalueDecl(ref baseIndexRef);
+                if (node != null) CompilationUnit.m_Nodes.Add(node);
                 if (baseIndexLast != baseIndexRef) return 0;
             }
 
@@ -142,7 +95,7 @@ namespace nss2csharp.Parser
             return 1;
         }
 
-        private Preprocessor ConstructPreprocessor(Node parent, ref int baseIndexRef)
+        private Preprocessor ConstructPreprocessor(ref int baseIndexRef)
         {
             int baseIndex = baseIndexRef;
             NssToken token;
@@ -152,15 +105,10 @@ namespace nss2csharp.Parser
 
             baseIndexRef = baseIndex;
 
-            return new UnknownPreprocessor
-            {
-                m_Parent = parent,
-                m_Tokens = new List<NssToken> { token },
-                m_Value = ((NssPreprocessor)token).m_Data
-            };
+            return new UnknownPreprocessor { m_Value = ((NssPreprocessor)token).m_Data };
         }
 
-        private Comment ConstructComment(Node parent, ref int baseIndexRef)
+        private Comment ConstructComment(ref int baseIndexRef)
         {
             int baseIndex = baseIndexRef;
             NssToken token;
@@ -181,75 +129,235 @@ namespace nss2csharp.Parser
                 comment = new BlockComment { m_CommentLines = commentToken.m_Comment.Split('\n').ToList() };
             }
 
-            comment.m_Parent = parent;
-            comment.m_Tokens = new List<NssToken> { token };
-
             baseIndexRef = baseIndex;
-
             return comment;
         }
 
-        private void ConstructFunctionDeclaration(Node parent, ref int baseIndexRef)
-        {
-        }
-
-        private void ConstructFunctionDefinition(Node parent, ref int baseIndexRef)
+        private Type ConstructType(ref int baseIndexRef)
         {
             int baseIndex = baseIndexRef;
             NssToken token;
 
-            NssKeyword returnType;
-            NssIdentifier structName;
-            NssIdentifier functionName;
-
             int err = TraverseNextToken(out token, ref baseIndex);
-            if (err != 0 || token.GetType() != typeof(NssKeyword)) return;
-            returnType = (NssKeyword)token;
+            if (err != 0 || token.GetType() != typeof(NssKeyword)) return null;
 
-            err = TraverseNextToken(out token, ref baseIndex);
-            if (err != 0 || token.GetType() != typeof(NssIdentifier)) return;
-            functionName = (NssIdentifier)token;
+            Type ret = null;
 
-            if (returnType.m_Keyword == NssKeywords.Struct)
+            switch (((NssKeyword)token).m_Keyword)
             {
-                structName = functionName; // Struct name comes first, so swap it.
-                err = TraverseNextToken(out token, ref baseIndex);
-                if (err != 0 || token.GetType() != typeof(NssIdentifier)) return;
-                functionName = (NssIdentifier)token;
+                case NssKeywords.Void: ret = new VoidType(); break;
+                case NssKeywords.Int: ret = new IntType(); break;
+                case NssKeywords.Float: ret = new FloatType(); break;
+                case NssKeywords.String: ret = new StringType(); break;
+                case NssKeywords.Struct:
+                {
+                    StructType str = new StructType();
+
+                    err = TraverseNextToken(out token, ref baseIndex);
+                    if (err != 0 || token.GetType() != typeof(NssIdentifier)) return null;
+
+                    str.m_TypeName = ((NssIdentifier)token).m_Identifier;
+                    ret = str;
+
+                    break;
+                }
+
+                case NssKeywords.Object: ret = new ObjectType(); break;
+                case NssKeywords.Location: ret = new LocationType(); break;
+                case NssKeywords.Vector: ret = new VectorType(); break;
+                case NssKeywords.ItemProperty: ret = new ItemPropertyType(); break;
+                case NssKeywords.Effect: ret = new EffectType(); break;
+                default:
+                    return null;
             }
 
-            err = TraverseNextToken(out token, ref baseIndex);
-            if (err != 0 || token.GetType() != typeof(NssSeparator)) return;
-            if (((NssSeparator)token).m_Separator != NssSeparators.OpenParen) return;
+            baseIndexRef = baseIndex;
+            return ret;
+        }
+
+        private Function ConstructFunction(ref int baseIndexRef)
+        {
+            int baseIndex = baseIndexRef;
+            NssToken token;
+
+            int baseIndexType = baseIndex;
+            Type type = ConstructType(ref baseIndex);
+            if (baseIndexType == baseIndex) return null;
+
+            int baseIndexFunctionName = baseIndex;
+            Lvalue functionName = ConstructLvalue(ref baseIndex);
+            if (baseIndexFunctionName == baseIndex) return null;
+
+            int err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
+            if (((NssSeparator)token).m_Separator != NssSeparators.OpenParen) return null;
 
             while (true)
             {
                 int baseIndexVariable = baseIndex;
-                ConstructUnassignedLvalue(parent, ref baseIndex);
+                ConstructLvalue(ref baseIndex);
                 if (baseIndexVariable == baseIndex) break;
             }
 
             err = TraverseNextToken(out token, ref baseIndex);
-            if (err != 0 || token.GetType() != typeof(NssSeparator)) return;
-            if (((NssSeparator)token).m_Separator != NssSeparators.CloseParen) return;
+            if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
+            if (((NssSeparator)token).m_Separator != NssSeparators.CloseParen) return null;
 
-            int baseIndexBlock = baseIndex;
-            ConstructBlock_r(parent, ref baseIndex);
-            if (baseIndexBlock == baseIndex) return;
+            Function ret = null;
+
+            NssSeparator sep = (NssSeparator)token;
+            if (sep.m_Separator == NssSeparators.Semicolon)
+            {
+
+            }
+            else if (sep.m_Separator == NssSeparators.OpenCurlyBrace)
+            {
+                --baseIndex; // Step base index back for the block function
+
+                int baseIndexBlock = baseIndex;
+                ConstructBlock_r(ref baseIndex);
+                if (baseIndexBlock == baseIndex) return null;
+            }
 
             baseIndexRef = baseIndex;
+            return ret;
         }
 
-        private void ConstructUnassignedLvalue(Node parent, ref int baseIndexRef)
+        private Lvalue ConstructLvalue(ref int baseIndexRef)
+        {
+            int baseIndex = baseIndexRef;
+            NssToken token;
+
+            int err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssIdentifier)) return null;
+
+            Lvalue ret = new Lvalue();
+            ret.m_Identifier = ((NssIdentifier)token).m_Identifier;
+
+            baseIndexRef = baseIndex;
+            return ret;
+        }
+
+        private Rvalue ConstructRvalue(ref int baseIndexRef)
+        {
+            int baseIndex = baseIndexRef;
+            NssToken token;
+
+            int err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssLiteral)) return null;
+
+            Rvalue ret = null;
+
+            NssLiteral lit = (NssLiteral)token;
+            switch (lit.m_LiteralType)
+            {
+                case NssLiteralType.Int:
+                {
+                    int value;
+                    if (!int.TryParse(lit.m_Literal, out value)) return null;
+                    ret = new IntLiteral { m_Value = value };
+                    break;
+                }
+
+                case NssLiteralType.Float:
+                {
+                    float value;
+                    if (!float.TryParse(lit.m_Literal, out value)) return null;
+                    ret = new FloatLiteral { m_Value = value };
+                    break;
+                }
+
+                case NssLiteralType.String:
+                    ret = new StringLiteral { m_Value = lit.m_Literal };
+                    break;
+
+                default: return null;
+            }
+
+            baseIndexRef = baseIndex;
+            return ret;
+        }
+
+        private LvalueDecl ConstructLvalueDecl(ref int baseIndexRef)
+        {
+            int baseIndex = baseIndexRef;
+            NssToken token;
+
+            // Constness
+            int err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0) return null;
+            bool constness = token.GetType() == typeof(NssKeyword) && ((NssKeyword)token).m_Keyword == NssKeywords.Const;
+            if (!constness) --baseIndex;
+
+            // Typename
+            int baseIndexType= baseIndex;
+            Type type = ConstructType(ref baseIndex);
+            if (baseIndexType == baseIndex) return null;
+
+            // Identifier
+            int baseIndexLvalue = baseIndex;
+            Lvalue lvalue = ConstructLvalue(ref baseIndex);
+            if (baseIndexLvalue == baseIndex) return null;
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0) return null;
+
+            LvalueDecl ret = null;
+
+            // Declaration
+            if (token.GetType() == typeof(NssSeparator))
+            {
+                NssSeparator sep = (NssSeparator)token;
+                if (sep.m_Separator != NssSeparators.Semicolon) return null;
+                if (constness) return null;
+
+                ret = new LvalueDecl();
+                ret.m_Type = type;
+                ret.m_Lvalue = lvalue;
+            }
+            // Declaration with assignment
+            else if (token.GetType() == typeof(NssOperator))
+            {
+                NssOperator op = (NssOperator)token;
+                if (op.m_Operator != NssOperators.Equals) return null;
+
+                Value assign;
+
+                // Literal
+                int baseIndexValue = baseIndex;
+                assign = ConstructRvalue(ref baseIndex);
+
+                if (baseIndexValue == baseIndex)
+                {
+                    // It's not a rvalue (literal), so it must be an lvalue.
+                    baseIndexValue = baseIndex;
+                    assign = ConstructLvalue(ref baseIndex);
+                    if (baseIndexValue == baseIndex) return null;
+                }
+
+                err = TraverseNextToken(out token, ref baseIndex);
+                if (err != 0) return null;
+                if (token.GetType() != typeof(NssSeparator) || ((NssSeparator)token).m_Separator != NssSeparators.Semicolon) return null;
+
+                LvalueDeclWithAssignment decl = constness ? new ConstLvalueDeclWithAssignment() : new LvalueDeclWithAssignment();
+                decl.m_Type = type;
+                decl.m_Lvalue = lvalue;
+                decl.m_AssignedValue = assign;
+                ret = decl;
+            }
+
+            baseIndexRef = baseIndex;
+            return ret;
+        }
+
+        private void ConstructBlock_r(ref int baseIndexRef)
         {
         }
 
-        private void ConstructAssignedLvalue(Node parent, ref int baseIndexRef)
+        private Literal ConstructLiteral(ref int baseIndexRef)
         {
-        }
-
-        private void ConstructBlock_r(Node parent, ref int baseIndexRef)
-        {
+            Literal ret = null;
+            return ret;
         }
 
         private void ReportTokenError(NssToken token, string error)
@@ -263,6 +371,11 @@ namespace nss2csharp.Parser
                 Errors.Add(string.Format("At line {0}:{1} to line {2}:{3}.",
                     debugInfo.LineStart, debugInfo.ColumnStart,
                     debugInfo.LineEnd, debugInfo.ColumnEnd));
+                Errors.Add(CompilationUnit.m_DebugInfo.m_SourceData[debugInfo.LineStart]);
+                Errors.Add(string.Format(
+                    "{0," + debugInfo.ColumnStart + "}" +
+                    "{1," + (debugInfo.ColumnEnd - debugInfo.ColumnStart) + "}",
+                    "^", "^"));
             }
         }
 
