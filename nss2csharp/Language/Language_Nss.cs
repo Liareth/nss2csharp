@@ -71,6 +71,7 @@ namespace nss2csharp.Language
             { "int",          NssKeywords.Int },
             { "float",        NssKeywords.Float },
             { "string",       NssKeywords.String },
+            { "struct",       NssKeywords.Struct },
             { "object",       NssKeywords.Object },
             { "location",     NssKeywords.Location },
             { "vector",       NssKeywords.Vector },
