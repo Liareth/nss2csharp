@@ -37,4 +37,28 @@ namespace nss2csharp.Parser
 
     public class ConstLvalueDeclWithAssignment : LvalueDeclWithAssignment
     { }
+
+    public class FunctionParameter : Node
+    {
+        public Type m_Type;
+        public Lvalue m_Name;
+    }
+
+    public class FunctionParameterWithDefault : FunctionParameter
+    {
+        public Rvalue m_Default;
+    }
+
+    public class Block : Node
+    {
+        public List<Node> m_Nodes = new List<Node>();
+    }
+
+    public class FunctionDeclaration : Function
+    { }
+
+    public class FunctionImplementation : Function
+    {
+        public Block m_Block;
+    }
 }

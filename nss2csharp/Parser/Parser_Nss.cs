@@ -180,44 +180,101 @@ namespace nss2csharp.Parser
             int baseIndex = baseIndexRef;
             NssToken token;
 
-            int baseIndexType = baseIndex;
-            Type type = ConstructType(ref baseIndex);
-            if (baseIndexType == baseIndex) return null;
+            Type returnType = ConstructType(ref baseIndex);
+            if (returnType == null) return null;
 
-            int baseIndexFunctionName = baseIndex;
             Lvalue functionName = ConstructLvalue(ref baseIndex);
-            if (baseIndexFunctionName == baseIndex) return null;
+            if (functionName == null) return null;
 
             int err = TraverseNextToken(out token, ref baseIndex);
             if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
             if (((NssSeparator)token).m_Separator != NssSeparators.OpenParen) return null;
 
+            List<FunctionParameter> parameters = new List<FunctionParameter>();
+
             while (true)
             {
-                int baseIndexVariable = baseIndex;
-                ConstructLvalue(ref baseIndex);
-                if (baseIndexVariable == baseIndex) break;
-            }
+                err = TraverseNextToken(out token, ref baseIndex);
+                if (err != 0) return null;
 
-            err = TraverseNextToken(out token, ref baseIndex);
-            if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
-            if (((NssSeparator)token).m_Separator != NssSeparators.CloseParen) return null;
+                // Terminate the loop if we're a close paren, or step back if not so we can continue our scan.
+                if (token.GetType() == typeof(NssSeparator) && ((NssSeparator)token).m_Separator == NssSeparators.CloseParen) break;
+                else --baseIndex;
+
+                Type paramType = ConstructType(ref baseIndex);
+                if (paramType == null) return null;
+
+                Lvalue paramName = ConstructLvalue(ref baseIndex);
+                if (paramName == null) return null;
+
+                err = TraverseNextToken(out token, ref baseIndex);
+                if (err != 0) return null;
+
+                FunctionParameter param = null;
+
+                // Default value.
+                if (token.GetType() == typeof(NssOperator))
+                {
+                    if (((NssOperator)token).m_Operator != NssOperators.Equals) return null;
+
+                    Rvalue defaultVal = ConstructRvalue(ref baseIndex);
+                    if (defaultVal == null) return null;
+
+                    param = new FunctionParameterWithDefault { m_Default = defaultVal };
+                    param.m_Type = paramType;
+                    param.m_Name = paramName;
+                    parameters.Add(param);
+                }
+                // Close paren or comma
+                else if (token.GetType() == typeof(NssSeparator))
+                {
+                    NssSeparator sepParams = (NssSeparator)token;
+
+                    if (sepParams.m_Separator == NssSeparators.CloseParen ||
+                        sepParams.m_Separator == NssSeparators.Comma)
+                    {
+                        param = new FunctionParameter();
+                        param.m_Type = paramType;
+                        param.m_Name = paramName;
+                        parameters.Add(param);
+
+                        if (sepParams.m_Separator == NssSeparators.CloseParen) break;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                    return null;
+                }
+            }
 
             Function ret = null;
 
-            NssSeparator sep = (NssSeparator)token;
-            if (sep.m_Separator == NssSeparators.Semicolon)
-            {
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
 
+            if (((NssSeparator)token).m_Separator == NssSeparators.Semicolon)
+            {
+                ret = new FunctionDeclaration();
             }
-            else if (sep.m_Separator == NssSeparators.OpenCurlyBrace)
+            else if (((NssSeparator)token).m_Separator == NssSeparators.OpenCurlyBrace)
             {
                 --baseIndex; // Step base index back for the block function
 
-                int baseIndexBlock = baseIndex;
-                ConstructBlock_r(ref baseIndex);
-                if (baseIndexBlock == baseIndex) return null;
+                Block block = ConstructBlock_r(ref baseIndex);
+                if (block == null) return null;
+
+                ret = new FunctionImplementation { m_Block = block };
             }
+            else
+            {
+                return null;
+            }
+
+            ret.m_Parameters = parameters;
 
             baseIndexRef = baseIndex;
             return ret;
@@ -290,14 +347,12 @@ namespace nss2csharp.Parser
             if (!constness) --baseIndex;
 
             // Typename
-            int baseIndexType= baseIndex;
             Type type = ConstructType(ref baseIndex);
-            if (baseIndexType == baseIndex) return null;
+            if (type == null) return null;
 
             // Identifier
-            int baseIndexLvalue = baseIndex;
             Lvalue lvalue = ConstructLvalue(ref baseIndex);
-            if (baseIndexLvalue == baseIndex) return null;
+            if (lvalue == null) return null;
 
             err = TraverseNextToken(out token, ref baseIndex);
             if (err != 0) return null;
@@ -324,15 +379,12 @@ namespace nss2csharp.Parser
                 Value assign;
 
                 // Literal
-                int baseIndexValue = baseIndex;
                 assign = ConstructRvalue(ref baseIndex);
-
-                if (baseIndexValue == baseIndex)
+                if (assign == null)
                 {
                     // It's not a rvalue (literal), so it must be an lvalue.
-                    baseIndexValue = baseIndex;
                     assign = ConstructLvalue(ref baseIndex);
-                    if (baseIndexValue == baseIndex) return null;
+                    if (assign == null) return null;
                 }
 
                 err = TraverseNextToken(out token, ref baseIndex);
@@ -350,8 +402,10 @@ namespace nss2csharp.Parser
             return ret;
         }
 
-        private void ConstructBlock_r(ref int baseIndexRef)
+        private Block ConstructBlock_r(ref int baseIndexRef)
         {
+            Block ret = null;
+            return ret;
         }
 
         private Literal ConstructLiteral(ref int baseIndexRef)
