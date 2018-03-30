@@ -310,16 +310,14 @@ namespace nss2csharp.Parser
             {
                 case NssLiteralType.Int:
                 {
-                    int value;
-                    if (!int.TryParse(lit.m_Literal, out value)) return null;
+                    if (!int.TryParse(lit.m_Literal, out int value)) return null;
                     ret = new IntLiteral { m_Value = value };
                     break;
                 }
 
                 case NssLiteralType.Float:
                 {
-                    float value;
-                    if (!float.TryParse(lit.m_Literal, out value)) return null;
+                    if (!float.TryParse(lit.m_Literal, out float value)) return null;
                     ret = new FloatLiteral { m_Value = value };
                     break;
                 }
