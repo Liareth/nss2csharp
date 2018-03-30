@@ -52,19 +52,13 @@ namespace nss2csharp.Parser
             // This is the root scope.
             //
             // Here it's valid to have either ...
+            //
             // - Preprocessor commands
-            // - Comments
             // - Functions (declaration or implementation)
             // - Variables (constant or global)
 
             { // PREPROCESSOR
                 Node node = ConstructPreprocessor(ref baseIndexRef);
-                if (node != null) CompilationUnit.m_Nodes.Add(node);
-                if (baseIndexLast != baseIndexRef) return 0;
-            }
-
-            { // COMMENT
-                Node node = ConstructComment(ref baseIndexRef);
                 if (node != null) CompilationUnit.m_Nodes.Add(node);
                 if (baseIndexLast != baseIndexRef) return 0;
             }
@@ -86,13 +80,10 @@ namespace nss2csharp.Parser
             if (TraverseNextToken(out token, ref baseIndexRef) == 0)
             {
                 ReportTokenError(token, "Unrecognised / unhandled token");
-            }
-            else
-            {
-                Errors.Add("Unknown parser error.");
+                return 1;
             }
 
-            return 1;
+            return 0;
         }
 
         private Preprocessor ConstructPreprocessor(ref int baseIndexRef)
@@ -217,16 +208,29 @@ namespace nss2csharp.Parser
                 {
                     if (((NssOperator)token).m_Operator != NssOperators.Equals) return null;
 
-                    Rvalue defaultVal = ConstructRvalue(ref baseIndex);
-                    if (defaultVal == null) return null;
+                    Value defaultVal = ConstructRvalue(ref baseIndex);
+                    if (defaultVal == null)
+                    {
+                        defaultVal = ConstructLvalue(ref baseIndex);
+                        if (defaultVal == null) return null;
+                    }
 
                     param = new FunctionParameterWithDefault { m_Default = defaultVal };
                     param.m_Type = paramType;
                     param.m_Name = paramName;
                     parameters.Add(param);
+
+                    err = TraverseNextToken(out token, ref baseIndex);
+                    if (err != 0) return null;
+
+                    // If we're not a comman, just step back so the loop above can handle us.
+                    if (token.GetType() == typeof(NssSeparator) && (((NssSeparator)token).m_Separator != NssSeparators.Comma)) --baseIndex;
+
+                    continue;
                 }
                 // Close paren or comma
-                else if (token.GetType() == typeof(NssSeparator))
+
+                if (token.GetType() == typeof(NssSeparator))
                 {
                     NssSeparator sepParams = (NssSeparator)token;
 
@@ -244,11 +248,11 @@ namespace nss2csharp.Parser
                     {
                         return null;
                     }
+
+                    continue;
                 }
-                else
-                {
-                    return null;
-                }
+
+                return null;
             }
 
             Function ret = null;
@@ -375,12 +379,9 @@ namespace nss2csharp.Parser
                 if (op.m_Operator != NssOperators.Equals) return null;
 
                 Value assign;
-
-                // Literal
                 assign = ConstructRvalue(ref baseIndex);
                 if (assign == null)
                 {
-                    // It's not a rvalue (literal), so it must be an lvalue.
                     assign = ConstructLvalue(ref baseIndex);
                     if (assign == null) return null;
                 }
@@ -402,7 +403,36 @@ namespace nss2csharp.Parser
 
         private Block ConstructBlock_r(ref int baseIndexRef)
         {
-            Block ret = null;
+            int baseIndex = baseIndexRef;
+            NssToken token;
+
+            int err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
+            if (((NssSeparator)token).m_Separator != NssSeparators.OpenCurlyBrace) return null;
+
+            int blockDepth = 1;
+
+            Block ret = new Block();
+
+            while (true)
+            {
+                { // BLOCK
+                    Block block = ConstructBlock_r(ref baseIndex);
+                    if (block != null)
+                    {
+                        ret.m_Nodes.Add(block);
+                        continue;
+                    }
+                }
+
+                err = TraverseNextToken(out token, ref baseIndex);
+                if (err != 0) return null;
+                if (token.GetType() == typeof(NssSeparator) && ((NssSeparator)token).m_Separator == NssSeparators.CloseCurlyBrace) break;
+
+                // This is where we return null because unrecognised token, but for now we just break.
+            }
+
+            baseIndexRef = baseIndex;
             return ret;
         }
 
@@ -431,7 +461,8 @@ namespace nss2csharp.Parser
             }
         }
 
-        private int TraverseNextToken(out NssToken token, ref int baseIndexRef, bool skipWhitespace = true)
+        private int TraverseNextToken(out NssToken token, ref int baseIndexRef, 
+            bool skipComments = true, bool skipWhitespace = true)
         {
             NssToken ret = null;
 
@@ -447,6 +478,8 @@ namespace nss2csharp.Parser
 
                 ret = Tokens[baseIndex];
 
+                bool skip = false;
+
                 if (skipWhitespace)
                 {
                     NssSeparator sep = ret as NssSeparator;
@@ -455,10 +488,20 @@ namespace nss2csharp.Parser
                         sep.m_Separator == NssSeparators.Space ||
                         sep.m_Separator == NssSeparators.NewLine ))
                     {
-                        ret = null;
-                        ++baseIndex;
-                        continue;
+                        skip = true;
                     }
+                }
+
+                if (skipComments && ret.GetType() == typeof(NssComment))
+                {
+                    skip = true;
+                }
+
+                if (skip)
+                {
+                    ret = null;
+                    ++baseIndex;
+                    continue;
                 }
             }
 

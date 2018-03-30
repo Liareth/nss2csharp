@@ -46,7 +46,7 @@ namespace nss2csharp.Parser
 
     public class FunctionParameterWithDefault : FunctionParameter
     {
-        public Rvalue m_Default;
+        public Value m_Default;
     }
 
     public class Block : Node
