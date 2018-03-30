@@ -75,9 +75,7 @@ namespace nss2csharp.Parser
                 if (baseIndexLast != baseIndexRef) return 0;
             }
 
-            NssToken token;
-
-            if (TraverseNextToken(out token, ref baseIndexRef) == 0)
+            if (TraverseNextToken(out NssToken token, ref baseIndexRef) == 0)
             {
                 ReportTokenError(token, "Unrecognised / unhandled token");
                 return 1;
@@ -89,9 +87,8 @@ namespace nss2csharp.Parser
         private Preprocessor ConstructPreprocessor(ref int baseIndexRef)
         {
             int baseIndex = baseIndexRef;
-            NssToken token;
 
-            int err = TraverseNextToken(out token, ref baseIndex);
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
             if (err != 0 || token.GetType() != typeof(NssPreprocessor)) return null;
 
             baseIndexRef = baseIndex;
@@ -102,9 +99,8 @@ namespace nss2csharp.Parser
         private Comment ConstructComment(ref int baseIndexRef)
         {
             int baseIndex = baseIndexRef;
-            NssToken token;
 
-            int err = TraverseNextToken(out token, ref baseIndex);
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
             if (err != 0 || token.GetType() != typeof(NssComment)) return null;
             NssComment commentToken = (NssComment)token;
 
@@ -127,9 +123,8 @@ namespace nss2csharp.Parser
         private Type ConstructType(ref int baseIndexRef)
         {
             int baseIndex = baseIndexRef;
-            NssToken token;
 
-            int err = TraverseNextToken(out token, ref baseIndex);
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
             if (err != 0 || token.GetType() != typeof(NssKeyword)) return null;
 
             Type ret = null;
@@ -169,7 +164,6 @@ namespace nss2csharp.Parser
         private Function ConstructFunction(ref int baseIndexRef)
         {
             int baseIndex = baseIndexRef;
-            NssToken token;
 
             Type returnType = ConstructType(ref baseIndex);
             if (returnType == null) return null;
@@ -177,7 +171,7 @@ namespace nss2csharp.Parser
             Lvalue functionName = ConstructLvalue(ref baseIndex);
             if (functionName == null) return null;
 
-            int err = TraverseNextToken(out token, ref baseIndex);
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
             if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
             if (((NssSeparator)token).m_Separator != NssSeparators.OpenParen) return null;
 
@@ -287,9 +281,8 @@ namespace nss2csharp.Parser
         private Lvalue ConstructLvalue(ref int baseIndexRef)
         {
             int baseIndex = baseIndexRef;
-            NssToken token;
 
-            int err = TraverseNextToken(out token, ref baseIndex);
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
             if (err != 0 || token.GetType() != typeof(NssIdentifier)) return null;
 
             Lvalue ret = new Lvalue();
@@ -302,9 +295,8 @@ namespace nss2csharp.Parser
         private Rvalue ConstructRvalue(ref int baseIndexRef)
         {
             int baseIndex = baseIndexRef;
-            NssToken token;
 
-            int err = TraverseNextToken(out token, ref baseIndex);
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
             if (err != 0 || token.GetType() != typeof(NssLiteral)) return null;
 
             Rvalue ret = null;
@@ -340,10 +332,9 @@ namespace nss2csharp.Parser
         private LvalueDecl ConstructLvalueDecl(ref int baseIndexRef)
         {
             int baseIndex = baseIndexRef;
-            NssToken token;
 
             // Constness
-            int err = TraverseNextToken(out token, ref baseIndex);
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
             if (err != 0) return null;
             bool constness = token.GetType() == typeof(NssKeyword) && ((NssKeyword)token).m_Keyword == NssKeywords.Const;
             if (!constness) --baseIndex;
@@ -404,13 +395,10 @@ namespace nss2csharp.Parser
         private Block ConstructBlock_r(ref int baseIndexRef)
         {
             int baseIndex = baseIndexRef;
-            NssToken token;
 
-            int err = TraverseNextToken(out token, ref baseIndex);
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
             if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
             if (((NssSeparator)token).m_Separator != NssSeparators.OpenCurlyBrace) return null;
-
-            int blockDepth = 1;
 
             Block ret = new Block();
 
@@ -482,11 +470,10 @@ namespace nss2csharp.Parser
 
                 if (skipWhitespace)
                 {
-                    NssSeparator sep = ret as NssSeparator;
-                    if (sep != null && (
+                    if (ret is NssSeparator sep && (
                         sep.m_Separator == NssSeparators.Tab ||
                         sep.m_Separator == NssSeparators.Space ||
-                        sep.m_Separator == NssSeparators.NewLine ))
+                        sep.m_Separator == NssSeparators.NewLine))
                     {
                         skip = true;
                     }
