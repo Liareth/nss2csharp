@@ -65,7 +65,7 @@ namespace nss2csharp.Parser
     public class FunctionCall : Node
     {
         public Lvalue m_Name;
-        public List<Value> m_Arguments;
+        public Expression m_Arguments;
     }
 
     public class Expression : Node

@@ -394,7 +394,6 @@ namespace nss2csharp.Parser
 
         public ArithmeticExpression ConstructArithmeticExpression(ref int baseIndexRef)
         {
-
             ArithmeticExpression ret = null;
             return ret;
         }
@@ -446,15 +445,30 @@ namespace nss2csharp.Parser
 
             if (parenDepth != 0) return null;
 
-            LogicalExpression ret = new LogicalExpression { m_Expression = expression };
+            LogicalExpression ret = new LogicalExpression { m_Expression = expression.TrimEnd() };
             baseIndexRef = baseIndex;
             return ret;
         }
 
         private FunctionCall ConstructFunctionCall(ref int baseIndexRef)
         {
+            int baseIndex = baseIndexRef;
 
-            FunctionCall ret = null;
+            // For now, we're gonna treat a function call like an lvalue + a logical expression.
+            // This obviously isn't true but we really don't care about the semantics for this tool.
+
+            Lvalue functionName = ConstructLvalue(ref baseIndex);
+            if (functionName == null) return null;
+
+            LogicalExpression args = ConstructLogicalExpression(ref baseIndex);
+            if (args == null) return null;
+
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
+            if (((NssSeparator)token).m_Separator != NssSeparators.Semicolon) return null;
+
+            FunctionCall ret = new FunctionCall { m_Name = functionName, m_Arguments = args };
+            baseIndexRef = baseIndex;
             return ret;
         }
 
