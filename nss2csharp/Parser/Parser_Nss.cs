@@ -392,6 +392,62 @@ namespace nss2csharp.Parser
             return ret;
         }
 
+        public ArithmeticExpression ConstructArithmeticExpression(ref int baseIndexRef)
+        {
+
+            ArithmeticExpression ret = null;
+            return ret;
+        }
+
+        public LogicalExpression ConstructLogicalExpression(ref int baseIndexRef)
+        {
+
+            LogicalExpression ret = null;
+            return ret;
+        }
+
+        private FunctionCall ConstructFunctionCall(ref int baseIndexRef)
+        {
+
+            FunctionCall ret = null;
+            return ret;
+        }
+
+        private LValueAssignment ConstructLvalueAssignment(ref int baseIndexRef)
+        {
+
+            LValueAssignment ret = null;
+            return ret;
+        }
+
+        private WhileLoop ConstructWhileLoop(ref int baseIndexRef)
+        {
+
+            WhileLoop ret = null;
+            return ret;
+        }
+
+        private ForLoop ConstructForLoop(ref int baseIndexRef)
+        {
+
+            ForLoop ret = null;
+            return ret;
+        }
+
+        private DoWhileLoop ConstructDoWhileLoop(ref int baseIndexRef)
+        {
+
+            DoWhileLoop ret = null;
+            return ret;
+        }
+
+        private IfStatement ConstructIfStatement(ref int baseIndexRef)
+        {
+
+            IfStatement ret = null;
+            return ret;
+        }
+
         private Block ConstructBlock_r(ref int baseIndexRef)
         {
             int baseIndex = baseIndexRef;
@@ -404,13 +460,18 @@ namespace nss2csharp.Parser
 
             while (true)
             {
-                { // BLOCK
-                    Block block = ConstructBlock_r(ref baseIndex);
-                    if (block != null)
-                    {
-                        ret.m_Nodes.Add(block);
-                        continue;
-                    }
+                Block block = ConstructBlock_r(ref baseIndex);
+                if (block != null)
+                {
+                    ret.m_Nodes.Add(block);
+                    continue;
+                }
+
+                Node validInBlock = ConstructValidInBlock(ref baseIndex);
+                if (validInBlock != null)
+                {
+                    ret.m_Nodes.Add(validInBlock);
+                    continue;
                 }
 
                 err = TraverseNextToken(out token, ref baseIndex);
@@ -422,6 +483,46 @@ namespace nss2csharp.Parser
 
             baseIndexRef = baseIndex;
             return ret;
+        }
+
+        private Node ConstructValidInBlock(ref int baseIndexRef)
+        {
+            { // FUNCTION CALL
+                Node node = ConstructFunctionCall(ref baseIndexRef);
+                if (node != null) return node;
+            }
+
+            { // VARIABLE DECLARATIONS
+                Node node = ConstructLvalueDecl(ref baseIndexRef);
+                if (node != null) return node;
+            }
+
+            { // VARIABLE ASSIGNMENTS
+                Node node = ConstructLvalueAssignment(ref baseIndexRef);
+                if (node != null) return node;
+            }
+
+            { // WHILE LOOP
+                Node node = ConstructWhileLoop(ref baseIndexRef);
+                if (node != null) return node;
+            }
+
+            { // FOR LOOP
+                Node node = ConstructForLoop(ref baseIndexRef);
+                if (node != null) return node;
+            }
+
+            { // DO WHILE LOOP
+                Node node = ConstructDoWhileLoop(ref baseIndexRef);
+                if (node != null) return node;
+            }
+
+            { // IF STATEMENT
+                Node node = ConstructIfStatement(ref baseIndexRef);
+                if (node != null) return node;
+            }
+
+            return null;
         }
 
         private Literal ConstructLiteral(ref int baseIndexRef)
