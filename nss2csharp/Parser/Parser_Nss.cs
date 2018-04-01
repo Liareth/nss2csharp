@@ -401,8 +401,53 @@ namespace nss2csharp.Parser
 
         public LogicalExpression ConstructLogicalExpression(ref int baseIndexRef)
         {
+            int baseIndex = baseIndexRef;
 
-            LogicalExpression ret = null;
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
+            if (((NssSeparator)token).m_Separator != NssSeparators.OpenParen) return null;
+
+            string expression = "";
+            int parenDepth = 1;
+
+            while (true)
+            {
+                err = TraverseNextToken(out token, ref baseIndex);
+                if (err != 0) return null;
+
+                if (token is NssSeparator sep)
+                {
+                    if (sep.m_Separator == NssSeparators.OpenParen)
+                    {
+                        ++parenDepth;
+                    }
+                    else if (sep.m_Separator == NssSeparators.CloseParen)
+                    {
+                        --parenDepth;
+                    }
+                    else if (sep.m_Separator != NssSeparators.Comma)
+                    {
+                        return null;
+                    }
+                }
+
+                if (parenDepth == 0)
+                {
+                    break;
+                }
+
+                expression += token.ToString();
+
+                if (token.GetType() == typeof(NssKeyword) || token.GetType() == typeof(NssIdentifier))
+                {
+                    expression += " ";
+                }
+            }
+
+            if (parenDepth != 0) return null;
+
+            LogicalExpression ret = new LogicalExpression { m_Expression = expression };
+            baseIndexRef = baseIndex;
             return ret;
         }
 
@@ -443,8 +488,18 @@ namespace nss2csharp.Parser
 
         private IfStatement ConstructIfStatement(ref int baseIndexRef)
         {
+            int baseIndex = baseIndexRef;
 
-            IfStatement ret = null;
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssKeyword)) return null;
+            if (((NssKeyword)token).m_Keyword != NssKeywords.If) return null;
+
+            LogicalExpression expression = ConstructLogicalExpression(ref baseIndex);
+            if (expression == null) return null;
+
+            IfStatement ret = new IfStatement { m_Expression = expression };
+
+            baseIndexRef = baseIndex;
             return ret;
         }
 
