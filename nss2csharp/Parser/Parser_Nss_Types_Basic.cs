@@ -61,6 +61,12 @@ namespace nss2csharp.Parser
     public class EffectType : Type
     { }
 
+    public class TalentType : Type
+    { }
+
+    public class ActionType : Type
+    { }
+
     public abstract class Value : Node
     { }
 

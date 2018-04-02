@@ -160,6 +160,8 @@ namespace nss2csharp.Parser
                 case NssKeywords.Vector: ret = new VectorType(); break;
                 case NssKeywords.ItemProperty: ret = new ItemPropertyType(); break;
                 case NssKeywords.Effect: ret = new EffectType(); break;
+                case NssKeywords.Talent: ret = new TalentType(); break;
+                case NssKeywords.Action: ret = new ActionType(); break;
                 default:
                     return null;
             }
