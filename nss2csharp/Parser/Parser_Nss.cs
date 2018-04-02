@@ -369,8 +369,6 @@ namespace nss2csharp.Parser
                 NssOperator op = (NssOperator)token;
                 if (op.m_Operator != NssOperators.Equals) return null;
 
-                --baseIndex; // Step back for below call.
-
                 ArithmeticExpression expr = ConstructArithmeticExpression(ref baseIndex);
                 if (expr == null) return null;
 
@@ -385,27 +383,87 @@ namespace nss2csharp.Parser
             return ret;
         }
 
-        public ArithmeticExpression ConstructArithmeticExpression(ref int baseIndexRef)
+        public AssignmentOpChain ConstructAssignmentOpChain(ref int baseIndexRef)
         {
             int baseIndex = baseIndexRef;
 
-            int err = TraverseNextToken(out NssToken token, ref baseIndex);
-            if (err != 0 || token.GetType() != typeof(NssOperator)) return null;
+            NssOperators?[] ops = new NssOperators?[] { null, null };
 
+            for (int i = 0; i < ops.Length; ++i)
+            {
+                int err = TraverseNextToken(out NssToken token, ref baseIndex);
+                if (err != 0) return null;
+
+                NssOperator op = token as NssOperator;
+                if (op == null)
+                {
+                    --baseIndex; // Step back for caller.
+                    break;
+                }
+
+                ops[i] = op.m_Operator;
+            }
+
+            if (!ops[0].HasValue) return null;
+
+            AssignmentOpChain ret = null;
+
+            if (ops[0].Value == NssOperators.Equals)
+            {
+                ret = new Equals();
+            }
+            else if (ops[0].Value == NssOperators.Addition)
+            {
+                if (ops[1].HasValue && ops[1].Value == NssOperators.Equals)
+                {
+                    ret = new PlusEquals();
+                }
+            }
+            else if (ops[0].Value == NssOperators.Subtraction)
+            {
+                if (ops[1].HasValue && ops[1].Value == NssOperators.Equals)
+                {
+                    ret = new PlusEquals();
+                }
+            }
+            else if (ops[0].Value == NssOperators.Multiplication)
+            {
+                if (ops[1].HasValue && ops[1].Value == NssOperators.Equals)
+                {
+                    ret = new MultiplyEquals();
+                }
+            }
+            else if (ops[0].Value == NssOperators.Division)
+            {
+                if (ops[1].HasValue && ops[1].Value == NssOperators.Equals)
+                {
+                    ret = new DivideEquals();
+                }
+            }
+
+            if (ret == null) return null;
+
+            baseIndexRef = baseIndex;
+            return ret;
+        }
+
+        public ArithmeticExpression ConstructArithmeticExpression(ref int baseIndexRef)
+        {
+            int baseIndex = baseIndexRef;
             string expression = "";
 
             while (true)
             {
+                int err = TraverseNextToken(out NssToken token, ref baseIndex);
+                if (err != 0) return null;
+                if (token.GetType() == typeof(NssSeparator) && ((NssSeparator)token).m_Separator == NssSeparators.Semicolon) break;
+
                 expression += token.ToString();
 
                 if (token.GetType() == typeof(NssKeyword) || token.GetType() == typeof(NssIdentifier))
                 {
                     expression += " ";
                 }
-
-                err = TraverseNextToken(out token, ref baseIndex);
-                if (err != 0) return null;
-                if (token.GetType() == typeof(NssSeparator) && ((NssSeparator)token).m_Separator == NssSeparators.Semicolon) break; ;
             }
 
             ArithmeticExpression ret = new ArithmeticExpression { m_Expression = expression.TrimEnd() };
@@ -494,10 +552,13 @@ namespace nss2csharp.Parser
             Lvalue lvalue = ConstructLvalue(ref baseIndex);
             if (lvalue == null) return null;
 
+            AssignmentOpChain opChain = ConstructAssignmentOpChain(ref baseIndex);
+            if (opChain == null) return null;
+
             ArithmeticExpression expr = ConstructArithmeticExpression(ref baseIndex);
             if (expr == null) return null;
 
-            LvalueAssignment ret = new LvalueAssignment { m_Lvalue = lvalue, m_Expression = expr };
+            LvalueAssignment ret = new LvalueAssignment { m_Lvalue = lvalue, m_OpChain = opChain, m_Expression = expr };
             baseIndexRef = baseIndex;
             return ret;
         }
@@ -562,6 +623,22 @@ namespace nss2csharp.Parser
             }
 
             ElseStatement ret = new ElseStatement { m_Action = action };
+            baseIndexRef = baseIndex;
+            return ret;
+        }
+
+        private ReturnStatement ConstructReturnStatement(ref int baseIndexRef)
+        {
+            int baseIndex = baseIndexRef;
+
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssKeyword)) return null;
+            if (((NssKeyword)token).m_Keyword != NssKeywords.Return) return null;
+
+            ArithmeticExpression expr = ConstructArithmeticExpression(ref baseIndex);
+            if (expr == null) return null;
+
+            ReturnStatement ret = new ReturnStatement { m_Expression = expr };
             baseIndexRef = baseIndex;
             return ret;
         }
@@ -644,6 +721,11 @@ namespace nss2csharp.Parser
 
             { // ELSE STATEMENT
                 Node node = ConstructElseStatement(ref baseIndexRef);
+                if (node != null) return node;
+            }
+
+            { // RETURN STATEMENT
+                Node node = ConstructReturnStatement(ref baseIndexRef);
                 if (node != null) return node;
             }
 

@@ -94,4 +94,22 @@ namespace nss2csharp.Parser
     {
         public List<FunctionParameter> m_Parameters = new List<FunctionParameter>();
     }
+
+    public abstract class AssignmentOpChain : Node
+    { }
+
+    public class Equals : AssignmentOpChain
+    { }
+
+    public class PlusEquals : AssignmentOpChain
+    { }
+
+    public class MinusEquals : AssignmentOpChain
+    { }
+
+    public class DivideEquals : AssignmentOpChain
+    { }
+
+    public class MultiplyEquals : AssignmentOpChain
+    { }
 }

@@ -82,6 +82,7 @@ namespace nss2csharp.Parser
     public class LvalueAssignment : Node
     {
         public Lvalue m_Lvalue;
+        public AssignmentOpChain m_OpChain;
         public Expression m_Expression;
     }
 
@@ -115,4 +116,10 @@ namespace nss2csharp.Parser
     {
         public Node m_Action;
     }
+
+    public class ReturnStatement : Node
+    {
+        public ArithmeticExpression m_Expression;
+    }
+
 }
