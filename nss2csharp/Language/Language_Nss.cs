@@ -40,7 +40,8 @@ namespace nss2csharp.Language
         ItemProperty,
         Effect,
         Talent,
-        Action
+        Action,
+        Event
     }
 
     public class NssKeyword : NssToken
@@ -81,6 +82,7 @@ namespace nss2csharp.Language
             { "effect",       NssKeywords.Effect },
             { "talent",       NssKeywords.Talent },
             { "action",       NssKeywords.Action },
+            { "event",        NssKeywords.Event },
         };
 
         public NssKeywords m_Keyword;
