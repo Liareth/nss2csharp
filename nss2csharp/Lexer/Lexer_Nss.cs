@@ -312,7 +312,7 @@ namespace nss2csharp.Lexer
                         {
                             seenDecimalPlace = true;
                         }
-                        else if (!char.IsNumber(chScanning))
+                        else if (!char.IsNumber(chScanning) && (!seenDecimalPlace || (seenDecimalPlace && chScanning != 'f')))
                         {
                             literal = new NssLiteral();
                             literal.m_LiteralType = seenDecimalPlace ? NssLiteralType.Float : NssLiteralType.Int;
