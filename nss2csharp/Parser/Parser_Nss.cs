@@ -417,7 +417,7 @@ namespace nss2csharp.Parser
                 negative = true;
             }
 
-            if (token.GetType() != typeof(NssLiteral) )return null;
+            if (token.GetType() != typeof(NssLiteral)) return null;
 
             Rvalue ret = null;
 
@@ -435,14 +435,17 @@ namespace nss2csharp.Parser
 
                 case NssLiteralType.Float:
                 {
+                    literal = literal.TrimEnd('f');
                     if (!float.TryParse(literal, out float value)) return null;
                     ret = new FloatLiteral { m_Value = value };
                     break;
                 }
 
                 case NssLiteralType.String:
+                {
                     ret = new StringLiteral { m_Value = literal };
                     break;
+                }
 
                 default: return null;
             }
