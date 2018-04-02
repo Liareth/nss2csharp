@@ -419,11 +419,11 @@ namespace nss2csharp.Lexer
             do
             {
                 eof = chScanningIndex >= data.Length - 1;
-
                 char chScanning = data[chScanningIndex];
-                bool hasSeparator = NssSeparator.Map.ContainsKey(chScanning);
 
-                if (eof || hasSeparator)
+                bool hasOperator = NssOperator.Map.ContainsKey(chScanning); // An identifier ends at the first sight of an operator.
+                bool hasSeparator = NssSeparator.Map.ContainsKey(chScanning);
+                if (eof || hasSeparator || hasOperator)
                 {
                     NssIdentifier identifier = new NssIdentifier();
 
