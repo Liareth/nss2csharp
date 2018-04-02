@@ -447,7 +447,7 @@ namespace nss2csharp.Parser
             return ret;
         }
 
-        public ArithmeticExpression ConstructArithmeticExpression(ref int baseIndexRef)
+        public ArithmeticExpression ConstructArithmeticExpression(ref int baseIndexRef, NssSeparators boundingSep = NssSeparators.Semicolon)
         {
             int baseIndex = baseIndexRef;
             string expression = "";
@@ -456,7 +456,7 @@ namespace nss2csharp.Parser
             {
                 int err = TraverseNextToken(out NssToken token, ref baseIndex);
                 if (err != 0) return null;
-                if (token.GetType() == typeof(NssSeparator) && ((NssSeparator)token).m_Separator == NssSeparators.Semicolon) break;
+                if (token.GetType() == typeof(NssSeparator) && ((NssSeparator)token).m_Separator == boundingSep) break;
 
                 expression += token.ToString();
 
@@ -572,8 +572,41 @@ namespace nss2csharp.Parser
 
         private ForLoop ConstructForLoop(ref int baseIndexRef)
         {
+            int baseIndex = baseIndexRef;
 
-            ForLoop ret = null;
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssKeyword)) return null;
+            if (((NssKeyword)token).m_Keyword != NssKeywords.For) return null;
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
+            if (((NssSeparator)token).m_Separator != NssSeparators.OpenParen) return null;
+
+            ArithmeticExpression pre = ConstructArithmeticExpression(ref baseIndex);
+            if (pre == null) return null;
+
+            ArithmeticExpression cond = ConstructArithmeticExpression(ref baseIndex);
+            if (cond == null) return null;
+
+            ArithmeticExpression post = ConstructArithmeticExpression(ref baseIndex, NssSeparators.CloseParen);
+            if (post == null) return null;
+
+            Node action = ConstructBlock_r(ref baseIndex);
+            if (action == null)
+            {
+                action = ConstructValidInBlock(ref baseIndex);
+                if (action == null) return null;
+            }
+
+            ForLoop ret = new ForLoop
+            {
+                m_Pre = pre,
+                m_Condition = cond,
+                m_Post = post,
+                m_Action = action
+            };
+
+            baseIndexRef = baseIndex;
             return ret;
         }
 
@@ -595,7 +628,7 @@ namespace nss2csharp.Parser
             LogicalExpression expression = ConstructLogicalExpression(ref baseIndex);
             if (expression == null) return null;
 
-            Node action = ConstructBlock_r(ref baseIndex); ;
+            Node action = ConstructBlock_r(ref baseIndex);
             if (action == null)
             {
                 action = ConstructValidInBlock(ref baseIndex);
