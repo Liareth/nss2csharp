@@ -354,24 +354,53 @@ namespace nss2csharp.Lexer
                         // We're matched a keyword, e.g. 'int ', but we might have, e.g. 'int integral', and the
                         // 'integral' is an identifier. So let's only accept a keyword if the character proceeding it
                         // is whitespace.
-                        int chNextAlongIndex = chBaseIndex + kvp.Key.Length;
-                        char chNextAlong = data[chNextAlongIndex];
+                        // Note - this is only true for some keywords, namely keywords that declare types.
+                        // Others don't care about that.
 
-                        if (NssSeparator.Map.ContainsKey(chNextAlong))
+                        List<NssKeywords> keywordsThatCareAboutSpaces = new List<NssKeywords>
                         {
-                            NssSeparators sep = NssSeparator.Map[chNextAlong];
-                            if (sep == NssSeparators.Space || sep == NssSeparators.Tab)
+                            NssKeywords.Case,
+                            NssKeywords.Const,
+                            NssKeywords.Void,
+                            NssKeywords.Int,
+                            NssKeywords.Float,
+                            NssKeywords.String,
+                            NssKeywords.Struct,
+                            NssKeywords.Object,
+                            NssKeywords.Location,
+                            NssKeywords.Vector,
+                            NssKeywords.ItemProperty,
+                            NssKeywords.Effect
+                        };
+
+                        int chNextAlongIndex = chBaseIndex + kvp.Key.Length;
+                        bool accept = !keywordsThatCareAboutSpaces.Contains(kvp.Value);
+
+                        if (!accept)
+                        {
+                            char chNextAlong = data[chNextAlongIndex];
+
+                            if (NssSeparator.Map.ContainsKey(chNextAlong))
                             {
-                                NssKeyword keyword = new NssKeyword();
-                                keyword.m_Keyword = kvp.Value;
-
-                                int chNewBaseIndex = chNextAlongIndex;
-                                AttachDebugData(keyword, DebugRanges, chBaseIndex, chNewBaseIndex - 1);
-
-                                Tokens.Add(keyword);
-                                chBaseIndex = chNewBaseIndex;
-                                break;
+                                NssSeparators sep = NssSeparator.Map[chNextAlong];
+                                if (sep == NssSeparators.Space || sep == NssSeparators.Tab)
+                                {
+                                    accept = true;
+                                }
                             }
+                        }
+
+                        if (accept)
+                        {
+                            NssKeyword keyword = new NssKeyword();
+                            keyword.m_Keyword = kvp.Value;
+
+                            int chNewBaseIndex = chNextAlongIndex;
+                            AttachDebugData(keyword, DebugRanges, chBaseIndex, chNewBaseIndex - 1);
+
+                            Tokens.Add(keyword);
+                            chBaseIndex = chNewBaseIndex;
+                            break;
                         }
                     }
                 }
