@@ -403,29 +403,43 @@ namespace nss2csharp.Parser
             int baseIndex = baseIndexRef;
 
             int err = TraverseNextToken(out NssToken token, ref baseIndex);
-            if (err != 0 || token.GetType() != typeof(NssLiteral)) return null;
+            if (err != 0) return null;
+
+            bool negative = false;
+
+            if (token.GetType() == typeof(NssOperator))
+            {
+                if (((NssOperator)token).m_Operator != NssOperators.Subtraction) return null;
+                err = TraverseNextToken(out token, ref baseIndex);
+                if (err != 0) return null;
+                negative = true;
+            }
+
+            if (token.GetType() != typeof(NssLiteral) )return null;
 
             Rvalue ret = null;
 
             NssLiteral lit = (NssLiteral)token;
+            string literal = (negative ? "-" : "") + lit.m_Literal;
+
             switch (lit.m_LiteralType)
             {
                 case NssLiteralType.Int:
                 {
-                    if (!int.TryParse(lit.m_Literal, out int value)) return null;
+                    if (!int.TryParse(literal, out int value)) return null;
                     ret = new IntLiteral { m_Value = value };
                     break;
                 }
 
                 case NssLiteralType.Float:
                 {
-                    if (!float.TryParse(lit.m_Literal, out float value)) return null;
+                    if (!float.TryParse(literal, out float value)) return null;
                     ret = new FloatLiteral { m_Value = value };
                     break;
                 }
 
                 case NssLiteralType.String:
-                    ret = new StringLiteral { m_Value = lit.m_Literal };
+                    ret = new StringLiteral { m_Value = literal };
                     break;
 
                 default: return null;
