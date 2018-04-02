@@ -88,6 +88,7 @@ namespace nss2csharp.Parser
     public class WhileLoop : Node
     {
         public Expression m_Expression;
+        public Node m_Action;
     }
 
     public class ForLoop : Node
@@ -95,15 +96,23 @@ namespace nss2csharp.Parser
         public Expression m_Pre;
         public Expression m_Condition;
         public Expression m_Post;
+        public Node m_Action;
     }
 
     public class DoWhileLoop : Node
     {
         public Expression m_Expression;
+        public Node m_Action;
     }
 
     public class IfStatement : Node
     {
         public Expression m_Expression;
+        public Node m_Action;
+    }
+
+    public class ElseStatement : Node
+    {
+        public Node m_Action;
     }
 }

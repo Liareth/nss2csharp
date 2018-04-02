@@ -534,8 +534,34 @@ namespace nss2csharp.Parser
             LogicalExpression expression = ConstructLogicalExpression(ref baseIndex);
             if (expression == null) return null;
 
-            IfStatement ret = new IfStatement { m_Expression = expression };
+            Node action = ConstructBlock_r(ref baseIndex); ;
+            if (action == null)
+            {
+                action = ConstructValidInBlock(ref baseIndex);
+                if (action == null) return null;
+            }
 
+            IfStatement ret = new IfStatement { m_Expression = expression, m_Action = action };
+            baseIndexRef = baseIndex;
+            return ret;
+        }
+
+        private ElseStatement ConstructElseStatement(ref int baseIndexRef)
+        {
+            int baseIndex = baseIndexRef;
+
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssKeyword)) return null;
+            if (((NssKeyword)token).m_Keyword != NssKeywords.Else) return null;
+
+            Node action = ConstructBlock_r(ref baseIndex);
+            if (action == null)
+            {
+                action = ConstructValidInBlock(ref baseIndex);
+                if (action == null) return null;
+            }
+
+            ElseStatement ret = new ElseStatement { m_Action = action };
             baseIndexRef = baseIndex;
             return ret;
         }
@@ -613,6 +639,11 @@ namespace nss2csharp.Parser
 
             { // IF STATEMENT
                 Node node = ConstructIfStatement(ref baseIndexRef);
+                if (node != null) return node;
+            }
+
+            { // ELSE STATEMENT
+                Node node = ConstructElseStatement(ref baseIndexRef);
                 if (node != null) return node;
             }
 
