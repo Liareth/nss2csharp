@@ -32,7 +32,7 @@ namespace nss2csharp.Parser
 
     public class LvalueDeclWithAssignment : LvalueDecl
     {
-        public Value m_AssignedValue;
+        public ArithmeticExpression m_Expression;
     }
 
     public class ConstLvalueDeclWithAssignment : LvalueDeclWithAssignment

@@ -369,22 +369,15 @@ namespace nss2csharp.Parser
                 NssOperator op = (NssOperator)token;
                 if (op.m_Operator != NssOperators.Equals) return null;
 
-                Value assign;
-                assign = ConstructRvalue(ref baseIndex);
-                if (assign == null)
-                {
-                    assign = ConstructLvalue(ref baseIndex);
-                    if (assign == null) return null;
-                }
+                --baseIndex; // Step back for below call.
 
-                err = TraverseNextToken(out token, ref baseIndex);
-                if (err != 0) return null;
-                if (token.GetType() != typeof(NssSeparator) || ((NssSeparator)token).m_Separator != NssSeparators.Semicolon) return null;
+                ArithmeticExpression expr = ConstructArithmeticExpression(ref baseIndex);
+                if (expr == null) return null;
 
                 LvalueDeclWithAssignment decl = constness ? new ConstLvalueDeclWithAssignment() : new LvalueDeclWithAssignment();
                 decl.m_Type = type;
                 decl.m_Lvalue = lvalue;
-                decl.m_AssignedValue = assign;
+                decl.m_Expression = expr;
                 ret = decl;
             }
 
@@ -394,7 +387,29 @@ namespace nss2csharp.Parser
 
         public ArithmeticExpression ConstructArithmeticExpression(ref int baseIndexRef)
         {
-            ArithmeticExpression ret = null;
+            int baseIndex = baseIndexRef;
+
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssOperator)) return null;
+
+            string expression = "";
+
+            while (true)
+            {
+                expression += token.ToString();
+
+                if (token.GetType() == typeof(NssKeyword) || token.GetType() == typeof(NssIdentifier))
+                {
+                    expression += " ";
+                }
+
+                err = TraverseNextToken(out token, ref baseIndex);
+                if (err != 0) return null;
+                if (token.GetType() == typeof(NssSeparator) && ((NssSeparator)token).m_Separator == NssSeparators.Semicolon) break; ;
+            }
+
+            ArithmeticExpression ret = new ArithmeticExpression { m_Expression = expression.TrimEnd() };
+            baseIndexRef = baseIndex;
             return ret;
         }
 
@@ -547,7 +562,9 @@ namespace nss2csharp.Parser
                 if (err != 0) return null;
                 if (token.GetType() == typeof(NssSeparator) && ((NssSeparator)token).m_Separator == NssSeparators.CloseCurlyBrace) break;
 
-                // This is where we return null because unrecognised token, but for now we just break.
+                ReportTokenError(token, "Unrecognised token in block-level.");
+
+                return null;
             }
 
             baseIndexRef = baseIndex;
