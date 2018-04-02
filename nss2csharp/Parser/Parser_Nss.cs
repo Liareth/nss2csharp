@@ -278,16 +278,115 @@ namespace nss2csharp.Parser
             return ret;
         }
 
+        private LvaluePreinc ConstructLvaluePreinc(ref int baseIndexRef)
+        {
+            int baseIndex = baseIndexRef;
+
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssOperator)) return null;
+            if (((NssOperator)token).m_Operator != NssOperators.Addition) return null;
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssOperator)) return null;
+            if (((NssOperator)token).m_Operator != NssOperators.Addition) return null;
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssIdentifier)) return null;
+            string identifier = ((NssIdentifier)token).m_Identifier;
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
+            if (((NssSeparator)token).m_Separator != NssSeparators.Semicolon) return null;
+
+            LvaluePreinc ret = new LvaluePreinc { m_Identifier = identifier };
+            baseIndexRef = baseIndex;
+            return ret;
+        }
+
+        private LvaluePostinc ConstructLValuePostinc(ref int baseIndexRef)
+        {
+            int baseIndex = baseIndexRef;
+
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssIdentifier)) return null;
+            string identifier = ((NssIdentifier)token).m_Identifier;
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssOperator)) return null;
+            if (((NssOperator)token).m_Operator != NssOperators.Addition) return null;
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssOperator)) return null;
+            if (((NssOperator)token).m_Operator != NssOperators.Addition) return null;
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
+            if (((NssSeparator)token).m_Separator != NssSeparators.Semicolon) return null;
+
+            LvaluePostinc ret = new LvaluePostinc { m_Identifier = identifier };
+            baseIndexRef = baseIndex;
+            return ret;
+        }
+
+        private LvaluePredec ConstructLvaluePredec(ref int baseIndexRef)
+        {
+            int baseIndex = baseIndexRef;
+
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssOperator)) return null;
+            if (((NssOperator)token).m_Operator != NssOperators.Subtraction) return null;
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssOperator)) return null;
+            if (((NssOperator)token).m_Operator != NssOperators.Subtraction) return null;
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssIdentifier)) return null;
+            string identifier = ((NssIdentifier)token).m_Identifier;
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
+            if (((NssSeparator)token).m_Separator != NssSeparators.Semicolon) return null;
+
+            LvaluePredec ret = new LvaluePredec { m_Identifier = identifier };
+            baseIndexRef = baseIndex;
+            return ret;
+        }
+
+        private LvaluePostdec ConstructLValuePostdec(ref int baseIndexRef)
+        {
+            int baseIndex = baseIndexRef;
+
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssIdentifier)) return null;
+            string identifier = ((NssIdentifier)token).m_Identifier;
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssOperator)) return null;
+            if (((NssOperator)token).m_Operator != NssOperators.Subtraction) return null;
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssOperator)) return null;
+            if (((NssOperator)token).m_Operator != NssOperators.Subtraction) return null;
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
+            if (((NssSeparator)token).m_Separator != NssSeparators.Semicolon) return null;
+
+            LvaluePostdec ret = new LvaluePostdec { m_Identifier = identifier };
+            baseIndexRef = baseIndex;
+            return ret;
+        }
+
         private Lvalue ConstructLvalue(ref int baseIndexRef)
         {
             int baseIndex = baseIndexRef;
 
             int err = TraverseNextToken(out NssToken token, ref baseIndex);
             if (err != 0 || token.GetType() != typeof(NssIdentifier)) return null;
+            string identifier = ((NssIdentifier)token).m_Identifier;
 
-            Lvalue ret = new Lvalue();
-            ret.m_Identifier = ((NssIdentifier)token).m_Identifier;
-
+            Lvalue ret = new Lvalue { m_Identifier = identifier };
             baseIndexRef = baseIndex;
             return ret;
         }
@@ -745,6 +844,26 @@ namespace nss2csharp.Parser
 
             { // VARIABLE ASSIGNMENTS
                 Node node = ConstructLvalueAssignment(ref baseIndexRef);
+                if (node != null) return node;
+            }
+
+            { // LVALUE PREINC
+                Node node = ConstructLvaluePreinc(ref baseIndexRef);
+                if (node != null) return node;
+            }
+
+            { // LVALUE POSTINC
+                Node node = ConstructLValuePostinc(ref baseIndexRef);
+                if (node != null) return node;
+            }
+
+            { // LVALUE PREDEC
+                Node node = ConstructLvaluePredec(ref baseIndexRef);
+                if (node != null) return node;
+            }
+
+            { // LVALUE POSTDEC
+                Node node = ConstructLValuePostdec(ref baseIndexRef);
                 if (node != null) return node;
             }
 

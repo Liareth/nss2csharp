@@ -86,6 +86,26 @@ namespace nss2csharp.Parser
         public Expression m_Expression;
     }
 
+    public class LvaluePreinc : Node
+    {
+        public string m_Identifier;
+    }
+
+    public class LvaluePostinc : Node
+    {
+        public string m_Identifier;
+    }
+
+    public class LvaluePredec : Node
+    {
+        public string m_Identifier;
+    }
+
+    public class LvaluePostdec : Node
+    {
+        public string m_Identifier;
+    }
+
     public class WhileLoop : Node
     {
         public Expression m_Expression;
