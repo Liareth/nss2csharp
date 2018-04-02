@@ -565,8 +565,24 @@ namespace nss2csharp.Parser
 
         private WhileLoop ConstructWhileLoop(ref int baseIndexRef)
         {
+            int baseIndex = baseIndexRef;
 
-            WhileLoop ret = null;
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssKeyword)) return null;
+            if (((NssKeyword)token).m_Keyword != NssKeywords.While) return null;
+
+            LogicalExpression cond = ConstructLogicalExpression(ref baseIndex);
+            if (cond == null) return null;
+
+            Node action = ConstructBlock_r(ref baseIndex);
+            if (action == null)
+            {
+                action = ConstructValidInBlock(ref baseIndex);
+                if (action == null) return null;
+            }
+
+            WhileLoop ret = new WhileLoop { m_Expression = cond, m_Action = action };
+            baseIndexRef = baseIndex;
             return ret;
         }
 
