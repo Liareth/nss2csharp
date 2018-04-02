@@ -106,7 +106,9 @@ namespace nss2csharp.Language
         CloseCurlyBrace,
         Semicolon,
         Tab,
-        Comma
+        Comma,
+        OpenSquareBracket,
+        CloseSquareBracket
     }
 
     public class NssSeparator : NssToken
@@ -134,7 +136,9 @@ namespace nss2csharp.Language
             { '}',  NssSeparators.CloseCurlyBrace },
             { ';',  NssSeparators.Semicolon },
             { '\t', NssSeparators.Tab },
-            { ',',  NssSeparators.Comma }
+            { ',',  NssSeparators.Comma },
+            { '[',  NssSeparators.OpenSquareBracket },
+            { ']',  NssSeparators.CloseSquareBracket }
         };
 
         public NssSeparators m_Separator;
