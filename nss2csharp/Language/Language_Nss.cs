@@ -38,7 +38,9 @@ namespace nss2csharp.Language
         Location,
         Vector,
         ItemProperty,
-        Effect
+        Effect,
+        Talent,
+        Action
     }
 
     public class NssKeyword : NssToken
@@ -77,6 +79,8 @@ namespace nss2csharp.Language
             { "vector",       NssKeywords.Vector },
             { "itemproperty", NssKeywords.ItemProperty },
             { "effect",       NssKeywords.Effect },
+            { "talent",       NssKeywords.Talent },
+            { "action",       NssKeywords.Action },
         };
 
         public NssKeywords m_Keyword;
