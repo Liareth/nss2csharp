@@ -1,0 +1,7 @@
+## What is this tool?
+
+nss2csharp is a tool that converts existing nwscript to C#. It can be run in two modes:
+
+- Base API gen, which, given nwscript.nss, will generate C# bindings to call all of the base script functions (as compatible with the matching NWNX plugin), including constants etc.
+
+- Script conversion, which is inteded to convert all NWNX headers to C#. The tool is not guaranteed to perfectly on non-NWNX headers.
