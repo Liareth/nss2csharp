@@ -727,8 +727,32 @@ namespace nss2csharp.Parser
 
         private DoWhileLoop ConstructDoWhileLoop(ref int baseIndexRef)
         {
+            int baseIndex = baseIndexRef;
 
-            DoWhileLoop ret = null;
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssKeyword)) return null;
+            if (((NssKeyword)token).m_Keyword != NssKeywords.Do) return null;
+
+            Node action = ConstructBlock_r(ref baseIndex);
+            if (action == null)
+            {
+                action = ConstructValidInBlock(ref baseIndex);
+                if (action == null) return null;
+            }
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssKeyword)) return null;
+            if (((NssKeyword)token).m_Keyword != NssKeywords.While) return null;
+
+            LogicalExpression cond = ConstructLogicalExpression(ref baseIndex);
+            if (cond == null) return null;
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
+            if (((NssSeparator)token).m_Separator != NssSeparators.Semicolon) return null;
+
+            DoWhileLoop ret = new DoWhileLoop { m_Expression = cond, m_Action = action };
+            baseIndexRef = baseIndex;
             return ret;
         }
 
@@ -898,12 +922,6 @@ namespace nss2csharp.Parser
             }
 
             return null;
-        }
-
-        private Literal ConstructLiteral(ref int baseIndexRef)
-        {
-            Literal ret = null;
-            return ret;
         }
 
         private void ReportTokenError(NssToken token, string error)
