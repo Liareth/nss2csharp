@@ -487,10 +487,18 @@ namespace nss2csharp.Parser
             return ret;
         }
 
-        private LValueAssignment ConstructLvalueAssignment(ref int baseIndexRef)
+        private LvalueAssignment ConstructLvalueAssignment(ref int baseIndexRef)
         {
+            int baseIndex = baseIndexRef;
 
-            LValueAssignment ret = null;
+            Lvalue lvalue = ConstructLvalue(ref baseIndex);
+            if (lvalue == null) return null;
+
+            ArithmeticExpression expr = ConstructArithmeticExpression(ref baseIndex);
+            if (expr == null) return null;
+
+            LvalueAssignment ret = new LvalueAssignment { m_Lvalue = lvalue, m_Expression = expr };
+            baseIndexRef = baseIndex;
             return ret;
         }
 

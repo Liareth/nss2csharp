@@ -79,7 +79,7 @@ namespace nss2csharp.Parser
     public class LogicalExpression : Expression
     { }
 
-    public class LValueAssignment : Node
+    public class LvalueAssignment : Node
     {
         public Lvalue m_Lvalue;
         public Expression m_Expression;
