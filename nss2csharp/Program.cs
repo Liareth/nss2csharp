@@ -81,8 +81,7 @@ namespace nss2csharp
                             Console.WriteLine("DEBUG: Converting tokens back to source and comparing.");
                             Output_Nss debugOutput = new Output_Nss();
 
-                            string data;
-                            err = debugOutput.GetFromTokens(analysis.Tokens, out data);
+                            err = debugOutput.GetFromTokens(analysis.Tokens, out string data);
                             if (err != 0)
                             {
                                 Console.Error.WriteLine("DEBUG: Failed due to error {0}", err);
@@ -135,6 +134,17 @@ namespace nss2csharp
 
                             break;
                         }
+
+                        Console.WriteLine("Running output.");
+                        Output_CSharp output = new Output_CSharp();
+                        err = output.GetFromCU(parser.CompilationUnit, out string outputStr);
+                        if (err != 0)
+                        {
+                            Console.Error.WriteLine("Failed due to error {0}", err);
+                            break;
+                        }
+
+                        File.WriteAllText(Path.ChangeExtension(script, ".cs"), outputStr);
                     }
                     while (false);
 
