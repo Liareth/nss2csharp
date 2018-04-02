@@ -144,4 +144,11 @@ namespace nss2csharp.Parser
         public Lvalue m_Name;
         public List<LvalueDecl> m_Members;
     }
+
+    public class VectorInlineInit : Rvalue
+    {
+        public Rvalue m_X;
+        public Rvalue m_Y;
+        public Rvalue m_Z;
+    }
 }

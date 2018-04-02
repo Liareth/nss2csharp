@@ -214,8 +214,12 @@ namespace nss2csharp.Parser
                     Value defaultVal = ConstructRvalue(ref baseIndex);
                     if (defaultVal == null)
                     {
-                        defaultVal = ConstructLvalue(ref baseIndex);
-                        if (defaultVal == null) return null;
+                        defaultVal = ConstructVectorInlineInit(ref baseIndex);
+                        if (defaultVal == null)
+                        {
+                            defaultVal = ConstructLvalue(ref baseIndex);
+                            if (defaultVal == null) return null;
+                        }
                     }
 
                     param = new FunctionParameterWithDefault { m_Default = defaultVal };
@@ -396,6 +400,41 @@ namespace nss2csharp.Parser
             string identifier = ((NssIdentifier)token).m_Identifier;
 
             Lvalue ret = new Lvalue { m_Identifier = identifier };
+            baseIndexRef = baseIndex;
+            return ret;
+        }
+
+        private VectorInlineInit ConstructVectorInlineInit(ref int baseIndexRef)
+        {
+            int baseIndex = baseIndexRef;
+
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
+            if (((NssSeparator)token).m_Separator != NssSeparators.OpenSquareBracket) return null;
+
+            VectorInlineInit ret = new VectorInlineInit();
+
+            ret.m_X = ConstructRvalue(ref baseIndex);
+            if (ret.m_X == null) return null;
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
+            if (((NssSeparator)token).m_Separator != NssSeparators.Comma) return null;
+
+            ret.m_Y = ConstructRvalue(ref baseIndex);
+            if (ret.m_Y == null) return null;
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
+            if (((NssSeparator)token).m_Separator != NssSeparators.Comma) return null;
+
+            ret.m_Z = ConstructRvalue(ref baseIndex);
+            if (ret.m_Z == null) return null;
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
+            if (((NssSeparator)token).m_Separator != NssSeparators.CloseSquareBracket) return null;
+
             baseIndexRef = baseIndex;
             return ret;
         }
