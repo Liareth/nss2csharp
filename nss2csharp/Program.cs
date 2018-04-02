@@ -58,7 +58,7 @@ namespace nss2csharp
                         int err = analysis.Analyse(sourceFile.Aggregate((a, b) => a + "\n" + b));
                         if (err != 0)
                         {
-                            Console.Error.WriteLine("Failed due to error {1}", err);
+                            Console.Error.WriteLine("Failed due to error {0}", err);
                             break;
                         }
 
