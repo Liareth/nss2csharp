@@ -162,6 +162,7 @@ namespace nss2csharp.Parser
                 case NssKeywords.Effect: ret = new EffectType(); break;
                 case NssKeywords.Talent: ret = new TalentType(); break;
                 case NssKeywords.Action: ret = new ActionType(); break;
+                case NssKeywords.Event: ret = new EventType(); break;
                 default:
                     return null;
             }

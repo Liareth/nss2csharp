@@ -67,6 +67,9 @@ namespace nss2csharp.Parser
     public class ActionType : Type
     { }
 
+    public class EventType : Type
+    { }
+
     public abstract class Value : Node
     { }
 
