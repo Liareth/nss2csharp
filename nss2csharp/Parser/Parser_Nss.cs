@@ -56,6 +56,7 @@ namespace nss2csharp.Parser
             // - Preprocessor commands
             // - Functions (declaration or implementation)
             // - Variables (constant or global)
+            // - Struct declarations
 
             { // PREPROCESSOR
                 Node node = ConstructPreprocessor(ref baseIndexRef);
@@ -71,6 +72,12 @@ namespace nss2csharp.Parser
 
             { // VARIABLES
                 Node node = ConstructLvalueDecl(ref baseIndexRef);
+                if (node != null) CompilationUnit.m_Nodes.Add(node);
+                if (baseIndexLast != baseIndexRef) return 0;
+            }
+
+            { // STRUCT DECLARATIONS
+                Node node = ConstructStructDeclaration(ref baseIndexRef);
                 if (node != null) CompilationUnit.m_Nodes.Add(node);
                 if (baseIndexLast != baseIndexRef) return 0;
             }
@@ -211,7 +218,7 @@ namespace nss2csharp.Parser
 
                     param = new FunctionParameterWithDefault { m_Default = defaultVal };
                     param.m_Type = paramType;
-                    param.m_Name = paramName;
+                    param.m_Lvalue = paramName;
                     parameters.Add(param);
 
                     err = TraverseNextToken(out token, ref baseIndex);
@@ -233,7 +240,7 @@ namespace nss2csharp.Parser
                     {
                         param = new FunctionParameter();
                         param.m_Type = paramType;
-                        param.m_Name = paramName;
+                        param.m_Lvalue = paramName;
                         parameters.Add(param);
 
                         if (sepParams.m_Separator == NssSeparators.CloseParen) break;
@@ -477,6 +484,49 @@ namespace nss2csharp.Parser
                 decl.m_Expression = expr;
                 ret = decl;
             }
+
+            baseIndexRef = baseIndex;
+            return ret;
+        }
+
+        private StructDeclaration ConstructStructDeclaration(ref int baseIndexRef)
+        {
+            int baseIndex = baseIndexRef;
+
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssKeyword)) return null;
+            if (((NssKeyword)token).m_Keyword != NssKeywords.Struct) return null;
+
+            Lvalue structName = ConstructLvalue(ref baseIndex);
+            if (structName == null) return null;
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
+            if (((NssSeparator)token).m_Separator != NssSeparators.OpenCurlyBrace) return null;
+
+            StructDeclaration ret = new StructDeclaration
+            {
+                m_Name = structName,
+                m_Members = new List<LvalueDecl>()
+            };
+
+            while (true)
+            {
+                LvalueDecl decl = ConstructLvalueDecl(ref baseIndex);
+                if (decl == null)
+                {
+                    err = TraverseNextToken(out token, ref baseIndex);
+                    if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
+                    if (((NssSeparator)token).m_Separator != NssSeparators.CloseCurlyBrace) return null;
+                    break;
+                }
+
+                ret.m_Members.Add(decl);
+            }
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
+            if (((NssSeparator)token).m_Separator != NssSeparators.Semicolon) return null;
 
             baseIndexRef = baseIndex;
             return ret;

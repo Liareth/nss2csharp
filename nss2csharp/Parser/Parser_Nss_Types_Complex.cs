@@ -38,11 +38,8 @@ namespace nss2csharp.Parser
     public class ConstLvalueDeclWithAssignment : LvalueDeclWithAssignment
     { }
 
-    public class FunctionParameter : Node
-    {
-        public Type m_Type;
-        public Lvalue m_Name;
-    }
+    public class FunctionParameter : LvalueDecl
+    { }
 
     public class FunctionParameterWithDefault : FunctionParameter
     {
@@ -142,4 +139,9 @@ namespace nss2csharp.Parser
         public ArithmeticExpression m_Expression;
     }
 
+    public class StructDeclaration : Node
+    {
+        public Lvalue m_Name;
+        public List<LvalueDecl> m_Members;
+    }
 }
