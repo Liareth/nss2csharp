@@ -101,6 +101,8 @@ namespace nss2csharp.Parser
 
     public abstract class Function : Node
     {
+        public Lvalue m_Name;
+        public Type m_ReturnType;
         public List<FunctionParameter> m_Parameters = new List<FunctionParameter>();
     }
 

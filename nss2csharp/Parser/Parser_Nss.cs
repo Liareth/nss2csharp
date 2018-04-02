@@ -286,6 +286,8 @@ namespace nss2csharp.Parser
                 return null;
             }
 
+            ret.m_Name = functionName;
+            ret.m_ReturnType = returnType;
             ret.m_Parameters = parameters;
 
             baseIndexRef = baseIndex;
