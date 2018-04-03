@@ -29,6 +29,8 @@ namespace nss2csharp.Output
 
                 if (node is FunctionDeclaration funcDecl)
                 {
+                    lines.Add("");
+
                     string name = funcDecl.m_Name.m_Identifier;
                     string retType = Output_CSharp.GetTypeAsString(funcDecl.m_ReturnType);
 
