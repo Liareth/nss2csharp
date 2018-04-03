@@ -80,7 +80,7 @@ namespace nss2csharp.Output
                                 // void SpeakOneLinerConversation(string sDialogResRef="", object oTokenTarget=OBJECT_TYPE_INVALID);
                                 // I don't know how it actually compiles in nwscript.nss - I bet the compiler has a hack for it too.
                                 // We'll just alias to OBJECT_INVALID in that case.
-                                defaultAsStr = "OBJECT_INVALID";
+                                defaultAsStr = "null";
                             }
 
                             paramStr += " = " + defaultAsStr;
