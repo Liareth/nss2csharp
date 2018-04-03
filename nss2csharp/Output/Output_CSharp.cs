@@ -74,6 +74,14 @@ namespace nss2csharp.Output
                     vectorLiteral.m_Y.m_Value.ToString(floatFormatStr),
                     vectorLiteral.m_Z.m_Value.ToString(floatFormatStr));
             }
+            else if (value is ObjectInvalidLiteral)
+            {
+                return "new NWN.Object()";
+            }
+            else if (value is ObjectSelfLiteral)
+            {
+                return "new NWN.ObjectSelf()";
+            }
 
             return null;
         }
