@@ -445,15 +445,59 @@ namespace nss2csharp.Parser
             return ret;
         }
 
+        private ObjectInvalidLiteral ConstructObjectInvalidLiteral(ref int baseIndexRef)
+        {
+            int baseIndex = baseIndexRef;
+
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssKeyword)) return null;
+            if (((NssKeyword)token).m_Keyword != NssKeywords.ObjectInvalid) return null;
+
+            baseIndexRef = baseIndex;
+            return new ObjectInvalidLiteral();
+        }
+
+        private ObjectSelfLiteral ConstructObjectSelfLiteral(ref int baseIndexRef)
+        {
+            int baseIndex = baseIndexRef;
+
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssKeyword)) return null;
+            if (((NssKeyword)token).m_Keyword != NssKeywords.ObjectSelf) return null;
+
+            baseIndexRef = baseIndex;
+            return new ObjectSelfLiteral();
+        }
+
         private Rvalue ConstructRvalue(ref int baseIndexRef)
         {
             int baseIndex = baseIndexRef;
 
-            VectorLiteral vector = ConstructVectorLiteral(ref baseIndex);
-            if (vector != null)
-            {
-                baseIndexRef = baseIndex;
-                return vector;
+            { // VECTOR LITERAL
+                VectorLiteral vector = ConstructVectorLiteral(ref baseIndex);
+                if (vector != null)
+                {
+                    baseIndexRef = baseIndex;
+                    return vector;
+                }
+            }
+
+            { // OBJECT_INVALID
+                ObjectInvalidLiteral objInvalid = ConstructObjectInvalidLiteral(ref baseIndex);
+                if (objInvalid != null)
+                {
+                    baseIndexRef = baseIndex;
+                    return objInvalid;
+                }
+            }
+
+            { // OBJECT_SELF
+                ObjectSelfLiteral objSelf = ConstructObjectSelfLiteral(ref baseIndex);
+                if (objSelf != null)
+                {
+                    baseIndexRef = baseIndex;
+                    return objSelf;
+                }
             }
 
             int err = TraverseNextToken(out NssToken token, ref baseIndex);

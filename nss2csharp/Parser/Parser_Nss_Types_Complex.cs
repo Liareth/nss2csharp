@@ -151,4 +151,10 @@ namespace nss2csharp.Parser
         public FloatLiteral m_Y;
         public FloatLiteral m_Z;
     }
+
+    public class ObjectInvalidLiteral : Rvalue
+    { }
+
+    public class ObjectSelfLiteral : Rvalue
+    { }
 }
