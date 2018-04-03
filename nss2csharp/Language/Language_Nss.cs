@@ -41,7 +41,9 @@ namespace nss2csharp.Language
         Effect,
         Talent,
         Action,
-        Event
+        Event,
+        ObjectInvalid,
+        ObjectSelf
     }
 
     public class NssKeyword : NssToken
@@ -61,28 +63,30 @@ namespace nss2csharp.Language
 
         public static Dictionary<string, NssKeywords> Map = new Dictionary<string, NssKeywords>
         {
-            { "if",           NssKeywords.If },
-            { "else",         NssKeywords.Else },
-            { "for",          NssKeywords.For },
-            { "while",        NssKeywords.While },
-            { "switch",       NssKeywords.Switch },
-            { "break",        NssKeywords.Break },
-            { "return",       NssKeywords.Return },
-            { "case",         NssKeywords.Case },
-            { "const",        NssKeywords.Const },
-            { "void",         NssKeywords.Void },
-            { "int",          NssKeywords.Int },
-            { "float",        NssKeywords.Float },
-            { "string",       NssKeywords.String },
-            { "struct",       NssKeywords.Struct },
-            { "object",       NssKeywords.Object },
-            { "location",     NssKeywords.Location },
-            { "vector",       NssKeywords.Vector },
-            { "itemproperty", NssKeywords.ItemProperty },
-            { "effect",       NssKeywords.Effect },
-            { "talent",       NssKeywords.Talent },
-            { "action",       NssKeywords.Action },
-            { "event",        NssKeywords.Event },
+            { "if",             NssKeywords.If },
+            { "else",           NssKeywords.Else },
+            { "for",            NssKeywords.For },
+            { "while",          NssKeywords.While },
+            { "switch",         NssKeywords.Switch },
+            { "break",          NssKeywords.Break },
+            { "return",         NssKeywords.Return },
+            { "case",           NssKeywords.Case },
+            { "const",          NssKeywords.Const },
+            { "void",           NssKeywords.Void },
+            { "int",            NssKeywords.Int },
+            { "float",          NssKeywords.Float },
+            { "string",         NssKeywords.String },
+            { "struct",         NssKeywords.Struct },
+            { "object",         NssKeywords.Object },
+            { "location",       NssKeywords.Location },
+            { "vector",         NssKeywords.Vector },
+            { "itemproperty",   NssKeywords.ItemProperty },
+            { "effect",         NssKeywords.Effect },
+            { "talent",         NssKeywords.Talent },
+            { "action",         NssKeywords.Action },
+            { "event",          NssKeywords.Event },
+            { "OBJECT_INVALID", NssKeywords.ObjectInvalid },
+            { "OBJECT_SELF",    NssKeywords.ObjectSelf },
         };
 
         public NssKeywords m_Keyword;
