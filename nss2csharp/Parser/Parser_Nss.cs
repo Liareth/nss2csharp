@@ -215,12 +215,8 @@ namespace nss2csharp.Parser
                     Value defaultVal = ConstructRvalue(ref baseIndex);
                     if (defaultVal == null)
                     {
-                        defaultVal = ConstructVectorInlineInit(ref baseIndex);
-                        if (defaultVal == null)
-                        {
-                            defaultVal = ConstructLvalue(ref baseIndex);
-                            if (defaultVal == null) return null;
-                        }
+                        defaultVal = ConstructLvalue(ref baseIndex);
+                        if (defaultVal == null) return null;
                     }
 
                     param = new FunctionParameterWithDefault { m_Default = defaultVal };
@@ -407,7 +403,7 @@ namespace nss2csharp.Parser
             return ret;
         }
 
-        private VectorInlineInit ConstructVectorInlineInit(ref int baseIndexRef)
+        private VectorLiteral ConstructVectorLiteral(ref int baseIndexRef)
         {
             int baseIndex = baseIndexRef;
 
@@ -415,23 +411,23 @@ namespace nss2csharp.Parser
             if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
             if (((NssSeparator)token).m_Separator != NssSeparators.OpenSquareBracket) return null;
 
-            VectorInlineInit ret = new VectorInlineInit();
+            VectorLiteral ret = new VectorLiteral();
 
-            ret.m_X = ConstructRvalue(ref baseIndex);
+            ret.m_X = ConstructRvalue(ref baseIndex) as FloatLiteral;
             if (ret.m_X == null) return null;
 
             err = TraverseNextToken(out token, ref baseIndex);
             if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
             if (((NssSeparator)token).m_Separator != NssSeparators.Comma) return null;
 
-            ret.m_Y = ConstructRvalue(ref baseIndex);
+            ret.m_Y = ConstructRvalue(ref baseIndex) as FloatLiteral;
             if (ret.m_Y == null) return null;
 
             err = TraverseNextToken(out token, ref baseIndex);
             if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
             if (((NssSeparator)token).m_Separator != NssSeparators.Comma) return null;
 
-            ret.m_Z = ConstructRvalue(ref baseIndex);
+            ret.m_Z = ConstructRvalue(ref baseIndex) as FloatLiteral;
             if (ret.m_Z == null) return null;
 
             err = TraverseNextToken(out token, ref baseIndex);
@@ -445,6 +441,13 @@ namespace nss2csharp.Parser
         private Rvalue ConstructRvalue(ref int baseIndexRef)
         {
             int baseIndex = baseIndexRef;
+
+            VectorLiteral vector = ConstructVectorLiteral(ref baseIndex);
+            if (vector != null)
+            {
+                baseIndexRef = baseIndex;
+                return vector;
+            }
 
             int err = TraverseNextToken(out NssToken token, ref baseIndex);
             if (err != 0) return null;

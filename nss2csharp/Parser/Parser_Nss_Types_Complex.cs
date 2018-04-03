@@ -145,10 +145,10 @@ namespace nss2csharp.Parser
         public List<LvalueDecl> m_Members;
     }
 
-    public class VectorInlineInit : Rvalue
+    public class VectorLiteral : Rvalue
     {
-        public Rvalue m_X;
-        public Rvalue m_Y;
-        public Rvalue m_Z;
+        public FloatLiteral m_X;
+        public FloatLiteral m_Y;
+        public FloatLiteral m_Z;
     }
 }
