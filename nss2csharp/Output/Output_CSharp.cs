@@ -38,7 +38,7 @@ namespace nss2csharp.Output
             else if (type.GetType() == typeof(StructType))       return ((StructType)type).m_TypeName;
             else if (type.GetType() == typeof(ObjectType))       return "NWN.Object";
             else if (type.GetType() == typeof(LocationType))     return "NWN.Location";
-            else if (type.GetType() == typeof(VectorType))       return "NWN.Vector";
+            else if (type.GetType() == typeof(VectorType))       return "NWN.Vector?";
             else if (type.GetType() == typeof(ItemPropertyType)) return "NWN.ItemProperty";
             else if (type.GetType() == typeof(EffectType))       return "NWN.Effect";
             else if (type.GetType() == typeof(TalentType))       return "NWN.Talent";
@@ -70,10 +70,7 @@ namespace nss2csharp.Output
             }
             else if (value is VectorLiteral vectorLiteral)
             {
-                return string.Format("new NWN.Vector({0}, {1}, {2})",
-                    vectorLiteral.m_X.m_Value.ToString(floatFormatStr) + "f",
-                    vectorLiteral.m_Y.m_Value.ToString(floatFormatStr) + "f",
-                    vectorLiteral.m_Z.m_Value.ToString(floatFormatStr) + "f");
+                return "null";
             }
             else if (value is ObjectInvalidLiteral)
             {
