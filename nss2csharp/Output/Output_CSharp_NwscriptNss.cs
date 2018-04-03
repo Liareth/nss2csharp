@@ -19,6 +19,21 @@ namespace nss2csharp.Output
 
             foreach (Node node in cu.m_Nodes)
             {
+                if (node is LineComment lineComment)
+                {
+                    lines.Add("        // " + lineComment.m_Comment);
+                }
+
+                if (node is BlockComment blockComment)
+                {
+                    lines.Add("        /*");
+                    foreach (string line in blockComment.m_CommentLines)
+                    {
+                        lines.Add("        " + line);
+                    }
+                    lines.Add("        */");
+                }
+
                 if (node is LvalueDeclWithAssignment lvalueDecl)
                 {
                     string type = Output_CSharp.GetTypeAsString(lvalueDecl.m_Type);
@@ -29,8 +44,6 @@ namespace nss2csharp.Output
 
                 if (node is FunctionDeclaration funcDecl)
                 {
-                    lines.Add("");
-
                     string name = funcDecl.m_Name.m_Identifier;
                     string retType = Output_CSharp.GetTypeAsString(funcDecl.m_ReturnType);
 
@@ -67,6 +80,7 @@ namespace nss2csharp.Output
                     }
 
                     lines.Add("        }");
+                    lines.Add("");
                 }
             }
 
