@@ -72,7 +72,18 @@ namespace nss2csharp.Output
 
                         if (param is FunctionParameterWithDefault def)
                         {
-                            paramStr += " = " + Output_CSharp.GetValueAsString(def.m_Default);
+                            string defaultAsStr = Output_CSharp.GetValueAsString(def.m_Default);
+
+                            if (defaultAsStr == "OBJECT_TYPE_INVALID")
+                            {
+                                // HACK: This function does something that is clearly wrong:
+                                // void SpeakOneLinerConversation(string sDialogResRef="", object oTokenTarget=OBJECT_TYPE_INVALID);
+                                // I don't know how it actually compiles in nwscript.nss - I bet the compiler has a hack for it too.
+                                // We'll just alias to OBJECT_INVALID in that case.
+                                defaultAsStr = "OBJECT_INVALID";
+                            }
+
+                            paramStr += " = " + defaultAsStr;
                         }
 
                         funcParams.Add(paramStr);
