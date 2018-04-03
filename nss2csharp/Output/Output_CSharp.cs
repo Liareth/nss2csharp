@@ -43,6 +43,7 @@ namespace nss2csharp.Output
             else if (type.GetType() == typeof(EffectType))       return "NWN.Effect";
             else if (type.GetType() == typeof(TalentType))       return "NWN.Talent";
             else if (type.GetType() == typeof(EventType))        return "NWN.Event";
+            else if (type.GetType() == typeof(ActionType))       return "NWN.Action";
 
             return null;
         }

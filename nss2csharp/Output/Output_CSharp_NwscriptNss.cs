@@ -6,6 +6,15 @@ namespace nss2csharp.Output
 {
     class Output_CSharp_NwscriptNss
     {
+        // This is a whitelist of functions we've implementedo ourselves.
+        private static List<string> s_BuiltIns = new List<string>
+        {
+            // ACTION FUNCTIONS
+            "AssignCommand",
+            "DelayCommand",
+            "ActionDoCommand"
+        };
+
         public int GetFromCU(CompilationUnit cu, out string data)
         {
             List<string> lines = new List<string>();
@@ -45,6 +54,12 @@ namespace nss2csharp.Output
                 if (node is FunctionDeclaration funcDecl)
                 {
                     string name = funcDecl.m_Name.m_Identifier;
+
+                    if (s_BuiltIns.Contains(name))
+                    {
+                        continue;
+                    }
+
                     string retType = Output_CSharp.GetTypeAsString(funcDecl.m_ReturnType);
 
                     List<string> funcParams = new List<string>();
