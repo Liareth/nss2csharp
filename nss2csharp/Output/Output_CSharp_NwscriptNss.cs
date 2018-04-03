@@ -35,15 +35,19 @@ namespace nss2csharp.Output
                     {
                         string paramType = Output_CSharp.GetTypeAsString(param.m_Type);
                         string paramName = param.m_Lvalue.m_Identifier;
+                        string paramStr = paramType + " " + paramName;
 
-                        // TODO: Support defaults
+                        if (param is FunctionParameterWithDefault def)
+                        {
+                            paramStr += " = " + Output_CSharp.GetValueAsString(def.m_Default);
+                        }
 
-                        funcParams.Add(paramType + " " + paramName);
+                        funcParams.Add(paramStr);
                     }
 
                     string parameters = funcParams.Count == 0 ? "" : funcParams.Aggregate((a, b) => a + ", " + b);
 
-                    lines.Add(string.Format("        public {0} {1} ({2});", retType, name, parameters));
+                    lines.Add(string.Format("        public {0} {1}({2});", retType, name, parameters));
                 }
             }
 

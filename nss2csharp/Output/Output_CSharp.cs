@@ -46,5 +46,36 @@ namespace nss2csharp.Output
 
             return null;
         }
+
+        public static string GetValueAsString(Value value)
+        {
+            const string floatFormatStr = "0.0#######";
+
+            if (value is Lvalue lv)
+            {
+                return lv.m_Identifier;
+            }
+            else if (value is IntLiteral intLit)
+            {
+                return intLit.m_Value.ToString();
+            }
+            else if (value is FloatLiteral floatLit)
+            {
+                return floatLit.m_Value.ToString(floatFormatStr);
+            }
+            else if (value is StringLiteral stringLit)
+            {
+                return "\"" + stringLit.m_Value + "\"";
+            }
+            else if (value is VectorLiteral vectorLiteral)
+            {
+                return string.Format("new NWN.Vector({0}, {1}, {2})",
+                    vectorLiteral.m_X.m_Value.ToString(floatFormatStr),
+                    vectorLiteral.m_Y.m_Value.ToString(floatFormatStr),
+                    vectorLiteral.m_Z.m_Value.ToString(floatFormatStr));
+            }
+
+            return null;
+        }
     }
 }
