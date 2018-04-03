@@ -54,12 +54,19 @@ namespace nss2csharp.Parser
             // Here it's valid to have either ...
             //
             // - Preprocessor commands
+            // - Comments
             // - Functions (declaration or implementation)
             // - Variables (constant or global)
             // - Struct declarations
 
             { // PREPROCESSOR
                 Node node = ConstructPreprocessor(ref baseIndexRef);
+                if (node != null) CompilationUnit.m_Nodes.Add(node);
+                if (baseIndexLast != baseIndexRef) return 0;
+            }
+
+            { // COMMENT
+                Node node = ConstructComment(ref baseIndexRef);
                 if (node != null) CompilationUnit.m_Nodes.Add(node);
                 if (baseIndexLast != baseIndexRef) return 0;
             }
@@ -107,7 +114,7 @@ namespace nss2csharp.Parser
         {
             int baseIndex = baseIndexRef;
 
-            int err = TraverseNextToken(out NssToken token, ref baseIndex);
+            int err = TraverseNextToken(out NssToken token, ref baseIndex, false);
             if (err != 0 || token.GetType() != typeof(NssComment)) return null;
             NssComment commentToken = (NssComment)token;
 
