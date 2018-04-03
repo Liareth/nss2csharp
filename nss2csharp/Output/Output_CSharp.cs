@@ -77,5 +77,42 @@ namespace nss2csharp.Output
 
             return null;
         }
+
+        public static string GetStackPush(Type type, Value val)
+        {
+            if (type.GetType() == typeof(IntType)) return string.Format("NWN.Internal.StackPushInteger({0})", GetValueAsString(val));
+            else if (type.GetType() == typeof(FloatType)) return string.Format("NWN.Internal.StackPushFloat({0})", GetValueAsString(val));
+            else if (type.GetType() == typeof(StringType)) return string.Format("NWN.Internal.StackPushString({0})", GetValueAsString(val));
+            else if (type.GetType() == typeof(ObjectType)) return string.Format("NWN.Internal.StackPushObject({0})", GetValueAsString(val));
+            else if (type.GetType() == typeof(LocationType)) return string.Format("NWN.Internal.StackPushEngineStructure(2, {0})", GetValueAsString(val));
+            else if (type.GetType() == typeof(VectorType)) return string.Format("NWN.Internal.StackPushVector({0})", GetValueAsString(val));
+            else if (type.GetType() == typeof(ItemPropertyType)) return string.Format("NWN.Internal.StackPushEngineStructure(4, {0})", GetValueAsString(val));
+            else if (type.GetType() == typeof(EffectType)) return string.Format("NWN.Internal.StackPushEngineStructure(0, {0})", GetValueAsString(val));
+            else if (type.GetType() == typeof(TalentType)) return string.Format("NWN.Internal.StackPushEngineStructure(3, {0})", GetValueAsString(val));
+            else if (type.GetType() == typeof(EventType)) return string.Format("NWN.Internal.StackPushEngineStructure(1, {0})", GetValueAsString(val));
+
+            return null;
+        }
+
+        public static string GetStackPop(Type type)
+        {
+            if (type.GetType() == typeof(IntType)) return "NWN.Internal.StackPopInteger()";
+            else if (type.GetType() == typeof(FloatType)) return "NWN.Internal.StackPopFloat()";
+            else if (type.GetType() == typeof(StringType)) return "NWN.Internal.StackPopString()";
+            else if (type.GetType() == typeof(ObjectType)) return "NWN.Internal.StackPopObject()";
+            else if (type.GetType() == typeof(LocationType)) return "NWN.Internal.StackPopEngineStructure(2)";
+            else if (type.GetType() == typeof(VectorType)) return "NWN.Internal.StackPopVector()";
+            else if (type.GetType() == typeof(ItemPropertyType)) return "NWN.Internal.StackPopEngineStructure(4)";
+            else if (type.GetType() == typeof(EffectType)) return "NWN.Internal.StackPopEngineStructure(0)";
+            else if (type.GetType() == typeof(TalentType)) return "NWN.Internal.StackPopEngineStructure(3)";
+            else if (type.GetType() == typeof(EventType)) return "NWN.Internal.StackPopEngineStructure(1)";
+
+            return null;
+        }
+
+        public static string GetInternalCall(int id)
+        {
+            return string.Format("NWN.Internal.CallBuiltIn({0})", id);
+        }
     }
 }

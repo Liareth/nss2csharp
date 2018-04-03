@@ -15,6 +15,8 @@ namespace nss2csharp.Output
             lines.Add("    class NWScript");
             lines.Add("    {");
 
+            int internalCallId = 0;
+
             foreach (Node node in cu.m_Nodes)
             {
                 if (node is LvalueDeclWithAssignment lvalueDecl)
@@ -47,7 +49,22 @@ namespace nss2csharp.Output
 
                     string parameters = funcParams.Count == 0 ? "" : funcParams.Aggregate((a, b) => a + ", " + b);
 
-                    lines.Add(string.Format("        public {0} {1}({2});", retType, name, parameters));
+                    lines.Add(string.Format("        public {0} {1}({2})", retType, name, parameters));
+                    lines.Add("        {");
+
+                    foreach (FunctionParameter param in funcDecl.m_Parameters)
+                    {
+                        lines.Add("            " + Output_CSharp.GetStackPush(param.m_Type, param.m_Lvalue) + ";");
+                    }
+
+                    lines.Add("            " + Output_CSharp.GetInternalCall(internalCallId++));
+
+                    if (funcDecl.m_ReturnType.GetType() != typeof(VoidType))
+                    {
+                        lines.Add("            return " + Output_CSharp.GetStackPop(funcDecl.m_ReturnType) + ";");
+                    }
+
+                    lines.Add("        }");
                 }
             }
 
