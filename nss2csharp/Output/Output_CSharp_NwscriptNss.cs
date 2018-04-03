@@ -72,7 +72,7 @@ namespace nss2csharp.Output
                         lines.Add("            " + Output_CSharp.GetStackPush(param.m_Type, param.m_Lvalue) + ";");
                     }
 
-                    lines.Add("            " + Output_CSharp.GetInternalCall(internalCallId++));
+                    lines.Add("            " + Output_CSharp.GetInternalCall(internalCallId++) + ";");
 
                     if (funcDecl.m_ReturnType.GetType() != typeof(VoidType))
                     {
