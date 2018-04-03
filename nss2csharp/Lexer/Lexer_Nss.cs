@@ -339,7 +339,9 @@ namespace nss2csharp.Lexer
         {
             char ch = data[chBaseIndex];
 
-            if (Tokens.Count == 0 || Tokens.Last().GetType() == typeof(NssSeparator))
+            if (Tokens.Count == 0 ||
+                Tokens.Last().GetType() == typeof(NssSeparator) ||
+                Tokens.Last().GetType() == typeof(NssOperator))
             {
                 foreach (KeyValuePair<string, NssKeywords> kvp in NssKeyword.Map)
                 {
