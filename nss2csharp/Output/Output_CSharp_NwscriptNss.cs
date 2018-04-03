@@ -24,7 +24,7 @@ namespace nss2csharp.Output
                     string type = Output_CSharp.GetTypeAsString(lvalueDecl.m_Type);
                     string name = lvalueDecl.m_Lvalue.m_Identifier;
                     string value = lvalueDecl.m_Expression.m_Expression;
-                    lines.Add(string.Format("        const {0} {1} = {2};", type, name, value));
+                    lines.Add(string.Format("        public const {0} {1} = {2};", type, name, value));
                 }
 
                 if (node is FunctionDeclaration funcDecl)
