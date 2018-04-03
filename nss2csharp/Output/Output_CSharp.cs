@@ -65,7 +65,7 @@ namespace nss2csharp.Output
             }
             else if (value is StringLiteral stringLit)
             {
-                return "\"" + stringLit.m_Value + "\"";
+                return stringLit.m_Value;
             }
             else if (value is VectorLiteral vectorLiteral)
             {
