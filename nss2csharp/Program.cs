@@ -53,7 +53,7 @@ namespace nss2csharp
                             break;
                         }
 
-                        Console.WriteLine("Running lexical analysis.");
+                        Console.WriteLine("Running lexical analysis. [+{0}ms]", timer.ElapsedMilliseconds);
                         Lexer_Nss analysis = new Lexer_Nss();
                         int err = analysis.Analyse(sourceFile.Aggregate((a, b) => a + "\n" + b));
                         if (err != 0)
@@ -121,7 +121,7 @@ namespace nss2csharp
                         }
 #endif
 
-                        Console.WriteLine("Running parser.");
+                        Console.WriteLine("Running parser. [+{0}ms]", timer.ElapsedMilliseconds);
                         Parser_Nss parser = new Parser_Nss();
                         err = parser.Parse(Path.GetFileName(script), sourceFile, analysis.Tokens);
                         if (err != 0)
@@ -135,7 +135,7 @@ namespace nss2csharp
                             break;
                         }
 
-                        Console.WriteLine("Running output.");
+                        Console.WriteLine("Running output. [+{0}ms]", timer.ElapsedMilliseconds);
                         Output_CSharp output = new Output_CSharp();
                         err = output.GetFromCU(parser.CompilationUnit, out string outputStr);
                         if (err != 0)
