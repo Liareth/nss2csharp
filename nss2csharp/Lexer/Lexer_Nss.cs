@@ -466,7 +466,7 @@ namespace nss2csharp.Lexer
         // We're progressing through all tokens in a linear fashion with no look-backs.
         // Therefore, we don't need to find the range each time (which is very slow) - we can just
         // start from our last index, because that's guaranteed to be the earliest one that matters.
-        static int s_LastDebugDataIndex = 0;
+        private int m_LastDebugDataIndex = 0;
 
         private void AttachDebugData(NssToken token, List<NssLexDebugRange> debugRanges, int indexStart, int indexEnd)
         {
@@ -475,7 +475,7 @@ namespace nss2csharp.Lexer
             bool foundStart = false;
             bool foundEnd = false;
 
-            for (int i = s_LastDebugDataIndex; i < debugRanges.Count; ++i)
+            for (int i = m_LastDebugDataIndex; i < debugRanges.Count; ++i)
             {
                 int startIndex = i;
                 int endIndex = i;
@@ -503,7 +503,7 @@ namespace nss2csharp.Lexer
                     debugInfo.LineEnd = endIndex;
                     debugInfo.ColumnStart = indexStart - debugRanges[startIndex].IndexStart;
                     debugInfo.ColumnEnd = indexEnd - debugRanges[endIndex].IndexStart;
-                    s_LastDebugDataIndex = i;
+                    m_LastDebugDataIndex = i;
                     break;
                 }
             }
