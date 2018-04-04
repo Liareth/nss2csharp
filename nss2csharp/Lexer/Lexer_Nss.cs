@@ -462,33 +462,55 @@ namespace nss2csharp.Lexer
             public int ColumnEnd { get; set; }
         }
 
+        // This is an optimization.
+        // We're progressing through all tokens in a linear fashion with no look-backs.
+        // Therefore, we don't need to find the range each time (which is very slow) - we can just
+        // start from our last index, because that's guaranteed to be the earliest one that matters.
+        static int s_LastDebugDataIndex = 0;
+
         private void AttachDebugData(NssToken token, List<NssLexDebugRange> debugRanges, int indexStart, int indexEnd)
         {
             NssLexDebugInfo debugInfo = new NssLexDebugInfo();
 
-            for (int i = 0; i < debugRanges.Count; ++i)
+            bool foundStart = false;
+            bool foundEnd = false;
+
+            for (int i = s_LastDebugDataIndex; i < debugRanges.Count; ++i)
             {
-                NssLexDebugRange startDebugRange = debugRanges[i];
-                NssLexDebugRange endDebugRange = debugRanges[i];
+                int startIndex = i;
+                int endIndex = i;
 
-                if (indexStart >= startDebugRange.IndexStart && indexStart < startDebugRange.IndexEnd)
+                if (indexStart >= debugRanges[startIndex].IndexStart && indexStart <= debugRanges[startIndex].IndexEnd)
                 {
-                    int endIndex;
+                    foundStart = true;
 
-                    for (endIndex = i; endIndex < debugRanges.Count; ++endIndex)
+                    for (int j = i; j < debugRanges.Count; ++j)
                     {
-                        endDebugRange = debugRanges[endIndex];
-                        if (indexStart >= endDebugRange.IndexStart && indexStart < endDebugRange.IndexEnd)
+                        if (indexStart >= debugRanges[endIndex].IndexStart && indexStart <= debugRanges[endIndex].IndexEnd)
                         {
+                            foundEnd = true;
+                            endIndex = j;
                             break;
                         }
                     }
 
+                    if (!foundEnd)
+                    {
+                        break;
+                    }
+
                     debugInfo.LineStart = i;
                     debugInfo.LineEnd = endIndex;
-                    debugInfo.ColumnStart = indexStart - startDebugRange.IndexStart;
-                    debugInfo.ColumnEnd = indexEnd - endDebugRange.IndexStart;
+                    debugInfo.ColumnStart = indexStart - debugRanges[startIndex].IndexStart;
+                    debugInfo.ColumnEnd = indexEnd - debugRanges[endIndex].IndexStart;
+                    s_LastDebugDataIndex = i;
+                    break;
                 }
+            }
+
+            if (!foundStart || !foundEnd)
+            {
+                Console.Error.WriteLine("Warning: No start or end debug range found for range {0} to {1}", indexStart, indexEnd);
             }
 
             token.UserData = debugInfo;
