@@ -94,8 +94,9 @@ namespace nss2csharp.Output
                     lines.Add(string.Format("        public {0} {1}({2})", retType, name, parameters));
                     lines.Add("        {");
 
-                    foreach (FunctionParameter param in funcDecl.m_Parameters)
+                    for (int i = funcDecl.m_Parameters.Count - 1; i >= 0; --i)
                     {
+                        FunctionParameter param = funcDecl.m_Parameters[i];
                         lines.Add("            " + Output_CSharp.GetStackPush(param.m_Type, param.m_Lvalue) + ";");
                     }
 
