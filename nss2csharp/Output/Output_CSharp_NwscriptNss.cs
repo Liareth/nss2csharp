@@ -58,6 +58,7 @@ namespace nss2csharp.Output
 
                     if (s_BuiltIns.Contains(name))
                     {
+                        ++internalCallId;
                         continue;
                     }
 
