@@ -4,6 +4,8 @@ namespace NWN
 {
     public class Object
     {
+        public static NWN.Object OBJECT_SELF { get { return Internal.OBJECT_SELF; } }
+
         public uint m_ObjId = Internal.OBJECT_INVALID;
 
         public static implicit operator Object(uint objId)
