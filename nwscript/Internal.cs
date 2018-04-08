@@ -1,39 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace NWN
 {
     class Internal
     {
-        public const uint OBJECT_INVALID = 0xFFFFFFFF;
+        public const uint OBJECT_INVALID = 0x7F000000;
 
         public static NWN.Object OBJECT_SELF { get; private set; }
 
         private static Stack<NWN.Object> s_ObjSelfStack = new Stack<NWN.Object>();
 
-        void PushScriptContext(uint objId)
+        static void PushScriptContext(uint objId)
         {
             s_ObjSelfStack.Push(new NWN.Object { m_ObjId = objId });
             OBJECT_SELF = s_ObjSelfStack.Peek();
         }
 
-        void PopScriptContext(uint objId)
+        static void PopScriptContext(uint objId)
         {
             s_ObjSelfStack.Pop();
             OBJECT_SELF = s_ObjSelfStack.Count == 0 ? null : s_ObjSelfStack.Peek();
         }
 
-        public static void CallBuiltIn(int id)
-        { }
+        [DllImport("NWNX_Mono")]
+        public extern static void CallBuiltIn(int id);
 
-        public static void StackPushInteger(int value)
-        { }
+        [DllImport("NWNX_Mono")]
+        public extern static void StackPushInteger(int value);
 
-        public static void StackPushFloat(float value)
-        { }
+        [DllImport("NWNX_Mono")]
+        public extern static void StackPushFloat(float value);
 
-        public static void StackPushString(string value)
-        { }
+        [DllImport("NWNX_Mono")]
+        public extern static void StackPushString(string value);
+
+        [DllImport("NWNX_Mono", EntryPoint = "StackPushObject")]
+        public extern static void StackPushObject_Native(uint value);
 
         public static void StackPushObject(NWN.Object value, bool defAsObjSelf)
         {
@@ -41,7 +45,12 @@ namespace NWN
             {
                 value = defAsObjSelf ? OBJECT_SELF : OBJECT_INVALID;
             }
+
+            StackPushObject_Native(value.m_ObjId);
         }
+
+        [DllImport("NWNX_Mono", EntryPoint = "StackPushVector")]
+        public extern static void StackPushVector_Native(NWN.Vector value);
 
         public static void StackPushVector(NWN.Vector? value)
         {
@@ -49,71 +58,108 @@ namespace NWN
             {
                 value = new NWN.Vector(0.0f, 0.0f, 0.0f);
             }
+
+            StackPushVector_Native(value.Value);
         }
+
+        [DllImport("NWNX_Mono", EntryPoint = "StackPushEffect")]
+        public extern static void StackPushEffect_Native(IntPtr value);
 
         public static void StackPushEffect(NWN.Effect value)
-        { }
+        {
+            StackPushEffect_Native(value.m_Handle);
+        }
+
+        [DllImport("NWNX_Mono", EntryPoint = "StackPushEvent")]
+        public extern static void StackPushEvent_Native(IntPtr value);
 
         public static void StackPushEvent(NWN.Event value)
-        { }
+        {
+            StackPushEvent_Native(value.m_Handle);
+        }
+
+        [DllImport("NWNX_Mono", EntryPoint = "StackPushLocation")]
+        public extern static void StackPushLocation_Native(IntPtr value);
 
         public static void StackPushLocation(NWN.Location value)
-        { }
+        {
+            StackPushLocation_Native(value.m_Handle);
+        }
+
+        [DllImport("NWNX_Mono", EntryPoint = "StackPushTalent")]
+        public extern static void StackPushTalent_Native(IntPtr value);
 
         public static void StackPushTalent(NWN.Talent value)
-        { }
+        {
+            StackPushTalent_Native(value.m_Handle);
+        }
+
+        [DllImport("NWNX_Mono", EntryPoint = "StackPushItemProperty")]
+        public extern static void StackPushItemProperty_Native(IntPtr value);
 
         public static void StackPushItemProperty(NWN.ItemProperty value)
-        { }
-
-        public static int StackPopInteger()
         {
-            return -1;
+            StackPushItemProperty_Native(value.m_Handle);
         }
 
-        public static float StackPopFloat()
-        {
-            return -1.0f;
-        }
+        [DllImport("NWNX_Mono")]
+        public extern static int StackPopInteger();
 
-        public static string StackPopString()
-        {
-            return "";
-        }
+        [DllImport("NWNX_Mono")]
+        public extern static float StackPopFloat();
+
+        [DllImport("NWNX_Mono")]
+        public extern static string StackPopString();
+
+        [DllImport("NWNX_Mono", EntryPoint = "StackPopObject")]
+        public extern static uint StackPopObject_Native();
 
         public static NWN.Object StackPopObject()
         {
-            return OBJECT_INVALID;
+            return StackPopObject_Native();
         }
 
-        public static NWN.Vector StackPopVector()
-        {
-            return new NWN.Vector(0.0f, 0.0f, 0.0f);
-        }
+        [DllImport("NWNX_Mono")]
+        public extern static NWN.Vector StackPopVector();
+
+        [DllImport("NWNX_Mono", EntryPoint = "StackPopEffect")]
+        public extern static IntPtr StackPopEffect_Native();
 
         public static NWN.Effect StackPopEffect()
         {
-            return new NWN.Effect { m_Handle = 0 };
+            return new NWN.Effect { m_Handle = StackPopEffect_Native() };
         }
+
+        [DllImport("NWNX_Mono", EntryPoint = "StackPopEvent")]
+        public extern static IntPtr StackPopEvent_Native();
 
         public static NWN.Event StackPopEvent()
         {
-            return new NWN.Event { m_Handle = 0 };
+            return new NWN.Event { m_Handle = StackPopEvent_Native() };
         }
+
+        [DllImport("NWNX_Mono", EntryPoint = "StackPopLocation")]
+        public extern static IntPtr StackPopLocation_Native();
 
         public static NWN.Location StackPopLocation()
         {
-            return new NWN.Location { m_Handle = 0 };
+            return new NWN.Location { m_Handle = StackPopLocation_Native() };
         }
+
+        [DllImport("NWNX_Mono", EntryPoint = "StackPopTalent")]
+        public extern static IntPtr StackPopTalent_Native();
 
         public static NWN.Talent StackPopTalent()
         {
-            return new NWN.Talent { m_Handle = 0 };
+            return new NWN.Talent { m_Handle = StackPopTalent_Native() };
         }
+
+        [DllImport("NWNX_Mono", EntryPoint = "StackPopItemProperty")]
+        public extern static IntPtr StackPopItemProperty_Native();
 
         public static NWN.ItemProperty StackPopItemProperty()
         {
-            return new NWN.ItemProperty { m_Handle = 0 };
+            return new NWN.ItemProperty { m_Handle = StackPopItemProperty_Native() };
         }
     }
 }

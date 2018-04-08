@@ -49,27 +49,27 @@ namespace NWN
 
     public struct Effect
     {
-        public uint m_Handle;
+        public IntPtr m_Handle;
     }
 
     public struct Event
     {
-        public uint m_Handle;
+        public IntPtr m_Handle;
     }
 
     public struct Location
     {
-        public uint m_Handle;
+        public IntPtr m_Handle;
     }
 
     public struct Talent
     {
-        public uint m_Handle;
+        public IntPtr m_Handle;
     }
 
     public struct ItemProperty
     {
-        public uint m_Handle;
+        public IntPtr m_Handle;
     }
 
     public class Action
