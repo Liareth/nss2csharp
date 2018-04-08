@@ -17,7 +17,7 @@ namespace NWN
         {
             bool lhsNull = object.ReferenceEquals(lhs, null);
             bool rhsNull = object.ReferenceEquals(rhs, null);
-            return (lhsNull && rhsNull) || (lhsNull && rhsNull && lhs.m_ObjId == rhs.m_ObjId);
+            return (lhsNull && rhsNull) || (!lhsNull && !rhsNull && lhs.m_ObjId == rhs.m_ObjId);
         }
 
         public static bool operator !=(Object lhs, Object rhs)
