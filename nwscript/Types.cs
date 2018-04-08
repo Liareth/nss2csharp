@@ -15,12 +15,13 @@ namespace NWN
 
         public static bool operator==(Object lhs, Object rhs)
         {
-            return lhs.m_ObjId == rhs.m_ObjId;
+            return (lhs == null && rhs == null) ||
+                (lhs != null && rhs != null && lhs.m_ObjId == rhs.m_ObjId);
         }
 
         public static bool operator !=(Object lhs, Object rhs)
         {
-            return lhs.m_ObjId != rhs.m_ObjId;
+            return !(lhs == rhs);
         }
 
         public override bool Equals(object o)
