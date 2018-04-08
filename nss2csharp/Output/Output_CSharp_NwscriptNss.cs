@@ -91,7 +91,7 @@ namespace nss2csharp.Output
 
                     string parameters = funcParams.Count == 0 ? "" : funcParams.Aggregate((a, b) => a + ", " + b);
 
-                    lines.Add(string.Format("        public {0} {1}({2})", retType, name, parameters));
+                    lines.Add(string.Format("        public static {0} {1}({2})", retType, name, parameters));
                     lines.Add("        {");
 
                     for (int i = funcDecl.m_Parameters.Count - 1; i >= 0; --i)
