@@ -21,7 +21,7 @@ namespace nss2csharp.Output
 
             lines.Add("namespace NWN");
             lines.Add("{");
-            lines.Add("    class NWScript");
+            lines.Add("    partial class NWScript");
             lines.Add("    {");
 
             int internalCallId = 0;
