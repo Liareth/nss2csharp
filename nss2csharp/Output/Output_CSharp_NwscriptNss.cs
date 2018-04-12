@@ -62,7 +62,7 @@ namespace nss2csharp.Output
                         continue;
                     }
 
-                    string retType = Output_CSharp.GetTypeAsString(funcDecl.m_ReturnType);
+                    string retType = Output_CSharp.GetTypeAsString(funcDecl.m_ReturnType, nullable: false);
 
                     List<string> funcParams = new List<string>();
                     foreach (FunctionParameter param in funcDecl.m_Parameters)

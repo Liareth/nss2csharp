@@ -19,7 +19,7 @@ namespace nss2csharp.Output
                 Output_CSharp_NwscriptNss output = new Output_CSharp_NwscriptNss();
                 return output.GetFromCU(cu, out data);
             }
-            else if (cu.m_Metadata.m_Name.StartsWith("NWNX_") && cu.m_Metadata.m_Name.EndsWith(".nss"))
+            else if (cu.m_Metadata.m_Name.StartsWith("nwnx") && cu.m_Metadata.m_Name.EndsWith(".nss"))
             {
                 Output_CSharp_NWNX output = new Output_CSharp_NWNX();
                 return output.GetFromCU(cu, out data);
@@ -29,7 +29,7 @@ namespace nss2csharp.Output
             return 1;
         }
 
-        public static string GetTypeAsString(Type type)
+        public static string GetTypeAsString(Type type, bool nullable = true)
         {
             if (type.GetType() == typeof(VoidType))              return "void";
             else if (type.GetType() == typeof(IntType))          return "int";
@@ -38,7 +38,7 @@ namespace nss2csharp.Output
             else if (type.GetType() == typeof(StructType))       return ((StructType)type).m_TypeName;
             else if (type.GetType() == typeof(ObjectType))       return "NWN.Object";
             else if (type.GetType() == typeof(LocationType))     return "NWN.Location";
-            else if (type.GetType() == typeof(VectorType))       return "NWN.Vector?";
+            else if (type.GetType() == typeof(VectorType))       return "NWN.Vector" + (nullable ? "?" : "");
             else if (type.GetType() == typeof(ItemPropertyType)) return "NWN.ItemProperty";
             else if (type.GetType() == typeof(EffectType))       return "NWN.Effect";
             else if (type.GetType() == typeof(TalentType))       return "NWN.Talent";
