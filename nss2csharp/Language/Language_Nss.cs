@@ -67,6 +67,7 @@ namespace nss2csharp.Language
             { "else",           NssKeywords.Else },
             { "for",            NssKeywords.For },
             { "while",          NssKeywords.While },
+            { "do",             NssKeywords.Do },
             { "switch",         NssKeywords.Switch },
             { "break",          NssKeywords.Break },
             { "return",         NssKeywords.Return },
