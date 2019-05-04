@@ -145,6 +145,20 @@ namespace nss2csharp.Parser
         public List<LvalueDecl> m_Members;
     }
 
+    public class SwitchStatement : Node
+    {
+        public LogicalExpression m_Expression;
+        public Block m_Block;
+    }
+
+    public class CaseLabel : Node
+    {
+        public Value m_Label;
+    }
+
+    public class BreakStatement : Node
+    { }
+
     public class VectorLiteral : Rvalue
     {
         public FloatLiteral m_X;
@@ -157,4 +171,6 @@ namespace nss2csharp.Parser
 
     public class ObjectSelfLiteral : Rvalue
     { }
+
+
 }

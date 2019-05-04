@@ -980,6 +980,65 @@ namespace nss2csharp.Parser
             return ret;
         }
 
+        private SwitchStatement ConstructSwitchStatement(ref int baseIndexRef)
+        {
+            int baseIndex = baseIndexRef;
+
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssKeyword)) return null;
+            if (((NssKeyword)token).m_Keyword != NssKeywords.Switch) return null;
+
+            LogicalExpression expr = ConstructLogicalExpression(ref baseIndex);
+            if (expr == null) return null;
+
+            Block block = ConstructBlock_r(ref baseIndex);
+            if (block == null) return null;
+
+            SwitchStatement ret = new SwitchStatement { m_Expression = expr, m_Block = block };
+            baseIndexRef = baseIndex;
+            return ret;
+        }
+
+        private CaseLabel ConstructCaseLabel(ref int baseIndexRef)
+        {
+            int baseIndex = baseIndexRef;
+
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssKeyword)) return null;
+            if (((NssKeyword)token).m_Keyword != NssKeywords.Case) return null;
+
+            Value label = ConstructRvalue(ref baseIndex);
+            if (label == null)
+            {
+                label = ConstructLvalue(ref baseIndex);
+                if (label == null) return null;
+            }
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssOperator)) return null;
+            if (((NssOperator)token).m_Operator != NssOperators.TernaryColon) return null;
+
+            CaseLabel ret = new CaseLabel { m_Label = label };
+            baseIndexRef = baseIndex;
+            return ret;
+        }
+
+        private BreakStatement ConstructBreakStatement(ref int baseIndexRef)
+        {
+            int baseIndex = baseIndexRef;
+
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssKeyword)) return null;
+            if (((NssKeyword)token).m_Keyword != NssKeywords.Break) return null;
+
+            err = TraverseNextToken(out token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
+            if (((NssSeparator)token).m_Separator != NssSeparators.Semicolon) return null;
+
+            baseIndexRef = baseIndex;
+            return new BreakStatement();
+        }
+
         private Block ConstructBlock_r(ref int baseIndexRef)
         {
             int baseIndex = baseIndexRef;
@@ -1083,6 +1142,21 @@ namespace nss2csharp.Parser
 
             { // RETURN STATEMENT
                 Node node = ConstructReturnStatement(ref baseIndexRef);
+                if (node != null) return node;
+            }
+
+            { // SWITCH STATEMENT
+                Node node = ConstructSwitchStatement(ref baseIndexRef);
+                if (node != null) return node;
+            }
+
+            { // CASE LABEL
+                Node node = ConstructCaseLabel(ref baseIndexRef);
+                if (node != null) return node;
+            }
+
+            { // BREAK STATEMENT
+                Node node = ConstructBreakStatement(ref baseIndexRef);
                 if (node != null) return node;
             }
 
