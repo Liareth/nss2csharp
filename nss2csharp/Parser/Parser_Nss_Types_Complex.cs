@@ -27,18 +27,27 @@ namespace nss2csharp.Parser
     public class LvalueDecl : Node
     {
         public Type m_Type;
+    }
+
+    public class LvalueDeclSingle : LvalueDecl
+    {
         public Lvalue m_Lvalue;
     }
 
-    public class LvalueDeclWithAssignment : LvalueDecl
+    public class LvalueDeclSingleWithAssignment : LvalueDeclSingle
     {
         public ArithmeticExpression m_Expression;
     }
 
-    public class ConstLvalueDeclWithAssignment : LvalueDeclWithAssignment
+    public class ConstLvalueDeclSingleWithAssignment : LvalueDeclSingleWithAssignment
     { }
 
-    public class FunctionParameter : LvalueDecl
+    public class LvalueDeclMultiple : LvalueDecl
+    {
+        public List<Lvalue> m_Lvalues = new List<Lvalue>();
+    }
+
+    public class FunctionParameter : LvalueDeclSingle
     { }
 
     public class FunctionParameterWithDefault : FunctionParameter
@@ -153,6 +162,7 @@ namespace nss2csharp.Parser
 
     public class CaseLabel : Node
     {
+        // m_Label can be null. If it is, this is the default case.
         public Value m_Label;
     }
 

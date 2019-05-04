@@ -43,7 +43,7 @@ namespace nss2csharp.Output
                     lines.Add("        */");
                 }
 
-                if (node is LvalueDeclWithAssignment lvalueDecl)
+                if (node is LvalueDeclSingleWithAssignment lvalueDecl)
                 {
                     string type = Output_CSharp.GetTypeAsString(lvalueDecl.m_Type);
                     string name = lvalueDecl.m_Lvalue.m_Identifier;

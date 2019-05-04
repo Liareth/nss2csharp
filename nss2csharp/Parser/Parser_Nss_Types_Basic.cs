@@ -123,4 +123,7 @@ namespace nss2csharp.Parser
 
     public class MultiplyEquals : AssignmentOpChain
     { }
+
+    public class RedundantSemiColon : Node
+    { }
 }

@@ -89,6 +89,12 @@ namespace nss2csharp.Parser
                 if (baseIndexLast != baseIndexRef) return 0;
             }
 
+            { // REDUNDANT SEMI COLON
+                Node node = ConstructRedundantSemiColon(ref baseIndexRef);
+                if (node != null) CompilationUnit.m_Nodes.Add(node);
+                if (baseIndexLast != baseIndexRef) return 0;
+            }
+
             if (TraverseNextToken(out NssToken token, ref baseIndexRef) == 0)
             {
                 ReportTokenError(token, "Unrecognised / unhandled token");
@@ -576,13 +582,40 @@ namespace nss2csharp.Parser
             // Declaration
             if (token.GetType() == typeof(NssSeparator))
             {
-                NssSeparator sep = (NssSeparator)token;
-                if (sep.m_Separator != NssSeparators.Semicolon) return null;
                 if (constness) return null;
 
-                ret = new LvalueDecl();
-                ret.m_Type = type;
-                ret.m_Lvalue = lvalue;
+                NssSeparator sep = (NssSeparator)token;
+
+                // If it's a comma, we're working on multiple.
+                if (sep.m_Separator == NssSeparators.Comma)
+                {
+                    LvalueDeclMultiple decl = new LvalueDeclMultiple();
+                    decl.m_Type = type;
+
+                    while (true)
+                    {
+                        lvalue = ConstructLvalue(ref baseIndex);
+                        if (lvalue == null) return null;
+
+                        decl.m_Lvalues.Add(lvalue);
+
+                        err = TraverseNextToken(out token, ref baseIndex);
+                        if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
+
+                        sep = (NssSeparator)token;
+                        if (sep.m_Separator == NssSeparators.Semicolon) break;
+                        else if (sep.m_Separator != NssSeparators.Comma) return null;
+                    }
+
+                    ret = decl;
+                }
+                else
+                {
+                    LvalueDeclSingle decl = new LvalueDeclSingle();
+                    decl.m_Type = type;
+                    decl.m_Lvalue = lvalue;
+                    ret = decl;
+                }
             }
             // Declaration with assignment
             else if (token.GetType() == typeof(NssOperator))
@@ -593,7 +626,7 @@ namespace nss2csharp.Parser
                 ArithmeticExpression expr = ConstructArithmeticExpression(ref baseIndex);
                 if (expr == null) return null;
 
-                LvalueDeclWithAssignment decl = constness ? new ConstLvalueDeclWithAssignment() : new LvalueDeclWithAssignment();
+                LvalueDeclSingleWithAssignment decl = constness ? new ConstLvalueDeclSingleWithAssignment() : new LvalueDeclSingleWithAssignment();
                 decl.m_Type = type;
                 decl.m_Lvalue = lvalue;
                 decl.m_Expression = expr;
@@ -645,6 +678,16 @@ namespace nss2csharp.Parser
 
             baseIndexRef = baseIndex;
             return ret;
+        }
+
+        private RedundantSemiColon ConstructRedundantSemiColon(ref int baseIndexRef)
+        {
+            int baseIndex = baseIndexRef;
+            int err = TraverseNextToken(out NssToken token, ref baseIndex);
+            if (err != 0 || token.GetType() != typeof(NssSeparator)) return null;
+            if (((NssSeparator)token).m_Separator != NssSeparators.Semicolon) return null;
+            baseIndexRef = baseIndex;
+            return new RedundantSemiColon();
         }
 
         public AssignmentOpChain ConstructAssignmentOpChain(ref int baseIndexRef)
@@ -1005,13 +1048,22 @@ namespace nss2csharp.Parser
 
             int err = TraverseNextToken(out NssToken token, ref baseIndex);
             if (err != 0 || token.GetType() != typeof(NssKeyword)) return null;
-            if (((NssKeyword)token).m_Keyword != NssKeywords.Case) return null;
 
-            Value label = ConstructRvalue(ref baseIndex);
-            if (label == null)
+            Value label = null;
+            NssKeyword keyword = (NssKeyword)token;
+
+            if (keyword.m_Keyword == NssKeywords.Case)
             {
-                label = ConstructLvalue(ref baseIndex);
-                if (label == null) return null;
+                label = ConstructRvalue(ref baseIndex);
+                if (label == null)
+                {
+                    label = ConstructLvalue(ref baseIndex);
+                    if (label == null) return null;
+                }
+            }
+            else if (keyword.m_Keyword != NssKeywords.Default)
+            {
+                return null;
             }
 
             err = TraverseNextToken(out token, ref baseIndex);
@@ -1157,6 +1209,11 @@ namespace nss2csharp.Parser
 
             { // BREAK STATEMENT
                 Node node = ConstructBreakStatement(ref baseIndexRef);
+                if (node != null) return node;
+            }
+
+            { // REDUNDANT SEMI COLON
+                Node node = ConstructRedundantSemiColon(ref baseIndexRef);
                 if (node != null) return node;
             }
 
