@@ -355,41 +355,15 @@ namespace nss2csharp.Lexer
                     {
                         // We're matched a keyword, e.g. 'int ', but we might have, e.g. 'int integral', and the
                         // 'integral' is an identifier. So let's only accept a keyword if the character proceeding it
-                        // is whitespace.
-                        // Note - this is only true for some keywords, namely keywords that declare types.
-                        // Others don't care about that.
-
-                        List<NssKeywords> keywordsThatCareAboutSpaces = new List<NssKeywords>
-                        {
-                            NssKeywords.Case,
-                            NssKeywords.Const,
-                            NssKeywords.Void,
-                            NssKeywords.Int,
-                            NssKeywords.Float,
-                            NssKeywords.String,
-                            NssKeywords.Struct,
-                            NssKeywords.Object,
-                            NssKeywords.Location,
-                            NssKeywords.Vector,
-                            NssKeywords.ItemProperty,
-                            NssKeywords.Effect
-                        };
+                        // is a separator or an operator.
 
                         int chNextAlongIndex = chBaseIndex + kvp.Key.Length;
-                        bool accept = !keywordsThatCareAboutSpaces.Contains(kvp.Value);
+                        bool accept = false;
 
                         if (!accept)
                         {
                             char chNextAlong = data[chNextAlongIndex];
-
-                            if (NssSeparator.Map.ContainsKey(chNextAlong))
-                            {
-                                NssSeparators sep = NssSeparator.Map[chNextAlong];
-                                if (sep == NssSeparators.Space || sep == NssSeparators.Tab)
-                                {
-                                    accept = true;
-                                }
-                            }
+                            accept = NssSeparator.Map.ContainsKey(chNextAlong) || NssOperator.Map.ContainsKey(chNextAlong);
                         }
 
                         if (accept)
@@ -420,7 +394,7 @@ namespace nss2csharp.Lexer
 
             do
             {
-                eof = chScanningIndex >= data.Length - 1;
+                eof = chScanningIndex >= data.Length;
                 char chScanning = data[chScanningIndex];
 
                 bool hasOperator = NssOperator.Map.ContainsKey(chScanning); // An identifier ends at the first sight of an operator.
