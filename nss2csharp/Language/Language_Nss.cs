@@ -43,7 +43,8 @@ namespace nss2csharp.Language
         Action,
         Event,
         ObjectInvalid,
-        ObjectSelf
+        ObjectSelf,
+        Default
     }
 
     public class NssKeyword : NssToken
@@ -88,6 +89,7 @@ namespace nss2csharp.Language
             { "event",          NssKeywords.Event },
             { "OBJECT_INVALID", NssKeywords.ObjectInvalid },
             { "OBJECT_SELF",    NssKeywords.ObjectSelf },
+            { "default",        NssKeywords.Default },
         };
 
         public NssKeywords m_Keyword;
